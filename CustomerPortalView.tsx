@@ -17,6 +17,7 @@ import { Theme } from './App';
 import { setTheme, selectActiveWallpaper, setActiveWallpaper } from './store/slices/appSlice';
 import { WallpaperGallery } from './components/WallpaperGallery';
 import { MaterialYouSettings } from './components/MaterialYouSettings';
+import { AuraConfigurationPanel } from './components/AuraConfigurationPanel';
 
 type CustomerPortalTab = 'dashboard' | 'order' | 'history' | 'loyalty' | 'profile';
 
@@ -307,7 +308,7 @@ const ProfileTab: React.FC = () => {
     const customer = customers.find(c => c.id === user?.id);
     const theme = useAppSelector(state => state.app.theme);
     const activeWallpaper = useAppSelector(selectActiveWallpaper);
-    const APP_VERSION = '11.8.0';
+    const APP_VERSION = '12.0.0';
 
     const [formState, setFormState] = useState({
         name: customer?.name || '',
@@ -398,6 +399,7 @@ const ProfileTab: React.FC = () => {
                     />
                 )}
                 {theme === 'material-you' && <MaterialYouSettings />}
+                {theme === 'adaptive-aura' && <AuraConfigurationPanel />}
             </div>
             <AboutPanel version={APP_VERSION} />
         </div>

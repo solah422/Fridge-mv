@@ -34,7 +34,7 @@
         --color-border-subtle: 229 231 235; /* gray-200 */
       }
 
-      .dark, .theme-redbox, .theme-amoled, .theme-glassmorphism, .theme-material-you {
+      .dark, .theme-redbox, .theme-amoled, .theme-glassmorphism, .theme-material-you, .theme-adaptive-aura {
         color-scheme: dark;
       }
 
@@ -204,6 +204,74 @@
         box-shadow: none;
       }
 
+      /* --- Adaptive Aura Theme --- */
+      .theme-adaptive-aura {
+        /* This theme is controlled by JS-injected variables. Fallbacks are from the default dark theme. */
+        --aura-bg-transparency: 1;
+        --aura-bg-blur: 0px;
+        --aura-radius: 8px;
+        --aura-transition-duration: 300ms;
+
+        /* Remap base colors to aura colors */
+        --color-primary: var(--aura-primary-rgb, 129 140 248);
+        --color-primary-hover: var(--aura-primary-hover-rgb, 99 102 241);
+        --color-primary-focus-ring: var(--aura-focus-ring-rgb, 165 180 252);
+        --color-primary-light: var(--aura-primary-light-rgb, 49 46 129);
+        --color-primary-text-on-light: var(--aura-text-on-primary-rgb, 199 210 254);
+        --color-text-on-primary: var(--aura-text-on-primary-rgb, 255 255 255);
+        --color-text-base: var(--aura-text-base-rgb, 229 231 235);
+        --color-text-muted: var(--aura-text-muted-rgb, 156 163 175);
+        --color-text-subtle: var(--aura-text-subtle-rgb, 107 114 128);
+        --color-bg-base: var(--aura-bg-base-rgb, 17 24 39);
+        --color-bg-card: var(--aura-bg-card-rgb, 31 41 55);
+        --color-bg-subtle: var(--aura-bg-subtle-rgb, 55 65 81);
+        --color-border: var(--aura-border-rgb, 75 85 99);
+        --color-border-subtle: var(--aura-border-subtle-rgb, 55 65 81);
+
+        /* Remap spacing based on density */
+        --tw-space-x-1: var(--aura-sp-1, 0.25rem);
+        --tw-space-y-1: var(--aura-sp-1, 0.25rem);
+        --tw-space-x-2: var(--aura-sp-2, 0.5rem);
+        --tw-space-y-2: var(--aura-sp-2, 0.5rem);
+        --tw-space-x-3: var(--aura-sp-3, 0.75rem);
+        --tw-space-y-3: var(--aura-sp-3, 0.75rem);
+        --tw-space-x-4: var(--aura-sp-4, 1rem);
+        --tw-space-y-4: var(--aura-sp-4, 1rem);
+        --tw-space-x-6: var(--aura-sp-6, 1.5rem);
+        --tw-space-y-6: var(--aura-sp-6, 1.5rem);
+      }
+
+      .theme-adaptive-aura.bg-\[rgb\(var\(--color-bg-base\)\)\] {
+        background-color: rgba(var(--color-bg-base)) !important;
+      }
+      .theme-adaptive-aura .bg-\[rgb\(var\(--color-bg-card\)\)\],
+      .theme-adaptive-aura .bg-\[rgb\(var\(--color-bg-subtle\)\)\] {
+        backdrop-filter: blur(var(--aura-bg-blur));
+        -webkit-backdrop-filter: blur(var(--aura-bg-blur));
+      }
+       .theme-adaptive-aura .bg-\[rgb\(var\(--color-bg-card\)\)\] {
+        background-color: rgba(var(--color-bg-card), var(--aura-bg-transparency)) !important;
+       }
+       .theme-adaptive-aura .bg-\[rgb\(var\(--color-bg-subtle\)\)\] {
+        background-color: rgba(var(--color-bg-subtle), var(--aura-bg-transparency)) !important;
+       }
+
+      /* Apply global radius to Tailwind classes */
+      .theme-adaptive-aura .rounded-md { border-radius: var(--aura-radius); }
+      .theme-adaptive-aura .rounded-lg { border-radius: calc(var(--aura-radius) * 1.33)); }
+      .theme-adaptive-aura .rounded-xl { border-radius: calc(var(--aura-radius) * 1.66)); }
+      .theme-adaptive-aura .rounded-t-md { border-top-left-radius: var(--aura-radius); border-top-right-radius: var(--aura-radius); }
+      .theme-adaptive-aura .rounded-b-md { border-bottom-left-radius: var(--aura-radius); border-bottom-right-radius: var(--aura-radius); }
+
+      /* Spacing for padding */
+      .theme-adaptive-aura .p-1 { padding: var(--aura-sp-1); }
+      .theme-adaptive-aura .p-2 { padding: var(--aura-sp-2); }
+      .theme-adaptive-aura .p-3 { padding: var(--aura-sp-3); }
+      .theme-adaptive-aura .p-4 { padding: var(--aura-sp-4); }
+      .theme-adaptive-aura .p-6 { padding: var(--aura-sp-6); }
+      .theme-adaptive-aura .px-4 { padding-left: var(--aura-sp-4); padding-right: var(--aura-sp-4); }
+      .theme-adaptive-aura .py-2 { padding-top: var(--aura-sp-2); padding-bottom: var(--aura-sp-2); }
+
 
       *,
       *::before,
@@ -211,6 +279,11 @@
         transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow;
         transition-duration: 300ms;
         transition-timing-function: ease-in-out;
+      }
+      .theme-adaptive-aura *,
+      .theme-adaptive-aura *::before,
+      .theme-adaptive-aura *::after {
+        transition-duration: var(--aura-transition-duration, 300ms);
       }
     </style>
   <script type="importmap">

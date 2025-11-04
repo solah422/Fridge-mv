@@ -7,8 +7,9 @@ import { setTheme, selectActiveWallpaper, setActiveWallpaper } from '../store/sl
 import { Theme } from '../App';
 import { WallpaperGallery } from './WallpaperGallery';
 import { MaterialYouSettings } from './MaterialYouSettings';
+import { AuraConfigurationPanel } from './AuraConfigurationPanel';
 
-const APP_VERSION = '11.8.0';
+const APP_VERSION = '12.0.0';
 
 export const FinanceSettingsView: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -69,6 +70,7 @@ export const FinanceSettingsView: React.FC = () => {
                     />
                 )}
                 {theme === 'material-you' && <MaterialYouSettings />}
+                {theme === 'adaptive-aura' && <AuraConfigurationPanel />}
             </section>
             
             <section>

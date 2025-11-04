@@ -10,8 +10,9 @@ import { addNotification } from '../store/slices/notificationsSlice';
 import { AboutPanel } from './AboutPanel';
 import { WallpaperGallery } from './WallpaperGallery';
 import { MaterialYouSettings } from './MaterialYouSettings';
+import { AuraConfigurationPanel } from './AuraConfigurationPanel';
 
-const APP_VERSION = '11.8.0';
+const APP_VERSION = '12.0.0';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'about';
 
@@ -277,6 +278,7 @@ export const SettingsView: React.FC = () => {
                         />
                     )}
                     {theme === 'material-you' && <MaterialYouSettings />}
+                    {theme === 'adaptive-aura' && <AuraConfigurationPanel />}
                     <BrandingSettings />
                     <ForecastingSettings settings={localForecastingSettings} onSettingChange={handleForecastingChange} />
                     <CreditManagementSettings settings={localCreditSettings} onSettingChange={handleCreditChange} />

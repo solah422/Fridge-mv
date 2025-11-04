@@ -1,5 +1,15 @@
 export const changelogData = [
-    { version: '11.8.0', date: 'Current', changes: [
+    { version: '12.0.0', date: 'Current', changes: [
+        'Major Feature: Introduced "Adaptive Aura," a new, hyper-customizable UI theme and dynamic theming engine.',
+        'New "Aura Configuration" panel available in settings for all user roles when the theme is active.',
+        'Added Style Presets: Instantly apply pre-configured styles like "Minimalist," "Glassy," and "Pro" modes.',
+        'Full Dynamic Color Control: Select any seed color to generate a complete, harmonious color palette for the entire app.',
+        'Granular UI Control: Added sliders to globally control corner radius, background transparency, and background blur intensity.',
+        'Adjustable Spacing: Added "Compact," "Standard," and "Spacious" options to control UI density.',
+        'Animation Speed Control: Added a slider to adjust the speed of all UI transitions and animations.',
+        'All user configurations for the Aura theme are saved and persist across sessions.',
+    ]},
+    { version: '11.8.0', date: 'Previous', changes: [
         'Major Feature: Implemented a new, highly customizable "Material You" UI theme, based on Google\'s dynamic color design system.',
         'New Dynamic Color Engine: The app can now generate a full, harmonious color palette from a single user-selected "seed" color when the Material You theme is active.',
         'Full Personalization: Added a "Theme Customization" panel to the settings for all user roles, featuring a color picker to choose any seed color.',

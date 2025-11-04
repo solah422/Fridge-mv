@@ -1,9 +1,6 @@
-
-
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectActiveWallpaper, selectMaterialYouSeedColor } from './store/slices/appSlice';
+import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectActiveWallpaper, selectMaterialYouSeedColor, selectAuraConfig } from './store/slices/appSlice';
 import { fetchCustomers, updateCustomers } from './store/slices/customersSlice';
 import { fetchProducts, updateProducts } from './store/slices/productsSlice';
 import { fetchTransactions, saveTransaction } from './store/slices/transactionsSlice';
@@ -24,6 +21,7 @@ import { logout, selectUser } from './store/slices/authSlice';
 import { addNotification } from './store/slices/notificationsSlice';
 import { storageService } from './services/storageService';
 import { generateMaterialYouPalette } from './utils/materialYouTheme';
+import { generateAuraVariables } from './utils/auraTheme';
 
 import { POSView } from './components/POSView';
 import { InvoicesView } from './components/InvoicesView';
@@ -39,11 +37,11 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '11.8.0';
+const APP_VERSION = '12.0.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
-export type Theme = 'light' | 'dark' | 'redbox' | 'amoled' | 'glassmorphism' | 'material-you';
+export type Theme = 'light' | 'dark' | 'redbox' | 'amoled' | 'glassmorphism' | 'material-you' | 'adaptive-aura';
 
 const AdminLayout: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -192,6 +190,7 @@ const App: React.FC = () => {
   const theme = useAppSelector(state => state.app.theme);
   const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const materialYouSeedColor = useAppSelector(selectMaterialYouSeedColor);
+  const auraConfig = useAppSelector(selectAuraConfig);
   const user = useAppSelector(selectUser);
   const transactions = useAppSelector(state => state.transactions.items);
   const customers = useAppSelector(state => state.customers.items);
@@ -404,7 +403,7 @@ const App: React.FC = () => {
     const appContainer = appContainerRef.current;
 
     // Cleanup all theme classes
-    root.classList.remove('dark', 'theme-redbox', 'theme-amoled', 'theme-glassmorphism', 'theme-material-you');
+    root.classList.remove('dark', 'theme-redbox', 'theme-amoled', 'theme-glassmorphism', 'theme-material-you', 'theme-adaptive-aura');
     if (appContainer) {
       appContainer.classList.remove('theme-glassmorphism-bg-dynamic');
       appContainer.style.backgroundImage = '';
@@ -426,19 +425,32 @@ const App: React.FC = () => {
       }
     } else if (theme === 'material-you') {
         root.classList.add('dark', 'theme-material-you');
+    } else if (theme === 'adaptive-aura') {
+        root.classList.add('dark', 'theme-adaptive-aura');
     }
   }, [theme, activeWallpaper]);
   
   // Material You Dynamic Color Updater
   useEffect(() => {
+    const root = document.documentElement;
     if (theme === 'material-you') {
         const palette = generateMaterialYouPalette(materialYouSeedColor);
-        const root = document.documentElement;
         for (const [key, value] of Object.entries(palette)) {
             root.style.setProperty(key, value);
         }
     }
   }, [theme, materialYouSeedColor]);
+
+  // Adaptive Aura Dynamic Style Updater
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'adaptive-aura') {
+        const variables = generateAuraVariables(auraConfig);
+        for (const [key, value] of Object.entries(variables)) {
+            root.style.setProperty(key, value);
+        }
+    }
+  }, [theme, auraConfig]);
 
   const renderContent = () => {
     if (!user) {
