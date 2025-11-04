@@ -37,7 +37,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '14.4.0';
+const APP_VERSION = '15.0.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
@@ -458,7 +458,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <div ref={appContainerRef} className="bg-[rgb(var(--color-bg-base))] min-h-screen font-sans text-[rgb(var(--color-text-base))]">
+    <div ref={appContainerRef} className={`min-h-screen font-sans ${user ? 'bg-[rgb(var(--color-bg-base))] text-[rgb(var(--color-text-base))]' : ''}`}>
+      {!user && <div className="login-background"></div>}
       <ToastContainer />
       {showWelcomePanel && <WelcomePanel version={APP_VERSION} onClose={() => dispatch(setShowWelcomePanel(false))} />}
       {renderContent()}

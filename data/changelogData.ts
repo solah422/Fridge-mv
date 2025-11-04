@@ -1,5 +1,14 @@
 export const changelogData = [
-    { version: '14.4.0', date: 'Current', changes: [
+    { version: '15.0.0', date: 'Current', changes: [
+        'Major Feature: Complete visual and functional overhaul of the main application login page.',
+        'New Visuals: Implemented a dynamic, animated gradient background inspired by oceanic colors for an "awe-inspiring" first impression.',
+        'New UI: The login, account activation, and password reset functions are now consolidated into a single, central "Glassmorphism" panel.',
+        'Fluid UX: Introduced seamless, animated transitions between login, activation, and reset views within the panel, eliminating page reloads for a modern SPA feel.',
+        'Functional Update: The primary login field now smartly accepts both customer Redbox IDs and special admin/finance usernames.',
+        'Enhanced Security & UX: Replaced separate modals with integrated panel views for "Activate Account" and "Forgot Password" flows.',
+        'Branding: The "Fridge MV" brand is now prominently featured in a floating style above the main panel.'
+    ]},
+    { version: '14.4.0', date: 'Previous', changes: [
         'Feature: Implemented Bulk Actions in the Customers view, enabling admins to manage multiple users simultaneously.',
         'New: Admins can now select multiple customers via checkboxes, with a "Select All" option for efficiency.',
         'New: A contextual action bar appears when customers are selected, showing the selection count and available actions.',
