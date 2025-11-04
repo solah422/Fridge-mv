@@ -10,10 +10,11 @@ import { addNotification } from '../store/slices/notificationsSlice';
 import { AboutPanel } from './AboutPanel';
 import { MaterialYouSettings } from './MaterialYouSettings';
 import { WallpaperGallery } from './WallpaperGallery';
+import { ChaosAndFunView } from './ChaosAndFunView';
 
-const APP_VERSION = '12.0.0';
+const APP_VERSION = '13.0.0';
 
-type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'about';
+type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'chaos' | 'about';
 
 const ForecastingSettings: React.FC<{
     settings: TForecastingSettings;
@@ -256,6 +257,7 @@ export const SettingsView: React.FC = () => {
           <TabButton tab="general" label="General" />
           <TabButton tab="gift_cards" label="Gift Cards & Credit" />
           <TabButton tab="promotions" label="Promotions" />
+          <TabButton tab="chaos" label="Chaos & Fun" />
           <TabButton tab="about" label="About" />
         </div>
 
@@ -295,6 +297,8 @@ export const SettingsView: React.FC = () => {
             {activeTab === 'gift_cards' && <GiftCardView />}
 
             {activeTab === 'promotions' && <PromotionsView />}
+
+            {activeTab === 'chaos' && <ChaosAndFunView />}
 
             {activeTab === 'about' && (
                 <AboutPanel version={APP_VERSION} />

@@ -207,3 +207,58 @@ export interface MonthlyStatement {
   paymentDate?: string;
   overdueStatus?: 'none' | '7_days_overdue';
 }
+
+
+// Chaos & Fun Module Types
+export interface AIPersonality {
+  id: string;
+  name: string;
+  greeting: string;
+  confirmation: string;
+  dashboardMessage: string;
+}
+
+export interface ImpulseBuySettings {
+  enabled: boolean;
+  discount: number;
+  duration: number;
+  frequency: 'daily' | 'twice-daily' | 'random';
+  eligibleItems: number[];
+  startMessage: string;
+  endMessage: string;
+}
+
+export interface PantryLotterySettings {
+  enabled: boolean;
+  itemName: string;
+  itemPrice: number;
+  eligibleItems: number[];
+  jackpotChance: number;
+  jackpotReward: string;
+  jackpotMessage: string;
+}
+
+export interface DebtDerbySettings {
+  enabled: boolean;
+  showHighRoller: boolean;
+  showSpenderStreaks: boolean;
+  showItemFutures: boolean;
+  leaderboardTitle: string;
+  leaderboardCount: number;
+  streakThreshold: number;
+  enableSassyAuditor: boolean;
+  commentFrequency: 'low' | 'medium' | 'high';
+}
+
+export interface AIPersonalitySwapSettings {
+  enabled: boolean;
+  rotation: 'daily' | 'weekly' | 'login';
+  personalities: AIPersonality[];
+}
+
+export interface ChaosSettings {
+    impulseBuy: ImpulseBuySettings;
+    pantryLottery: PantryLotterySettings;
+    debtDerby: DebtDerbySettings;
+    aiPersonalitySwap: AIPersonalitySwapSettings;
+}

@@ -16,6 +16,7 @@ import productSuggestionsReducer from './slices/productSuggestionsSlice';
 import passwordResetReducer from './slices/passwordResetSlice';
 import notificationsReducer from './slices/notificationsSlice';
 import monthlyStatementsReducer from './slices/monthlyStatementsSlice';
+import chaosReducer from './slices/chaosSlice';
 
 export const store = configureStore({
   reducer: {
@@ -36,6 +37,7 @@ export const store = configureStore({
     passwordReset: passwordResetReducer,
     notifications: notificationsReducer,
     monthlyStatements: monthlyStatementsReducer,
+    chaos: chaosReducer,
   },
 });
 

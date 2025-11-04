@@ -1,5 +1,13 @@
 export const changelogData = [
-    { version: '12.0.0', date: 'Current', changes: [
+    { version: '13.0.0', date: 'Current', changes: [
+        'Major Feature: Implemented a new "Chaos & Fun" management module in the Admin Settings panel.',
+        'New: Added the "Impulse Buy" (Flash Sale) feature to create random, time-sensitive discounts on items.',
+        'New: Added the "Pantry Lottery" (Mystery Snack) feature, allowing users to buy a mystery item for a chance at a random reward.',
+        'New: Added "The Debt Derby" feature to gamify the credit ledger with leaderboards and an optional "Sassy AI Auditor".',
+        'New: Added the "AI Personality Swap" feature to change the app\'s notification and message tone with customizable personas.',
+        'All "Chaos & Fun" features are fully configurable, with detailed explanations in the UI, and are disabled by default.',
+    ]},
+    { version: '12.0.0', date: 'Previous', changes: [
         'Major Feature: Implemented a new "Glassmorphism" UI theme, providing a modern, semi-transparent aesthetic with a frosted-glass effect.',
         'Applied frosted-glass effect to all major UI components including panels, cards, modals, buttons, and input fields.',
         'New Feature: Added a dynamic Wallpaper Gallery, which appears in Settings when the Glass theme is active.',

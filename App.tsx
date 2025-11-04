@@ -15,6 +15,7 @@ import { fetchProductRequests } from './store/slices/productRequestsSlice';
 import { fetchProductSuggestions } from './store/slices/productSuggestionsSlice';
 import { fetchPasswordResetRequests } from './store/slices/passwordResetSlice';
 import { fetchMonthlyStatements, addMonthlyStatements, updateMonthlyStatement } from './store/slices/monthlyStatementsSlice';
+import { fetchChaosSettings } from './store/slices/chaosSlice';
 import { syncOfflineTransactions } from './services/apiService';
 import { Product, Wholesaler, PurchaseOrder, InventoryEvent, Transaction, Customer, LoyaltySettings, MonthlyStatement } from './types';
 import { logout, selectUser } from './store/slices/authSlice';
@@ -36,7 +37,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '12.0.0';
+const APP_VERSION = '13.0.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
@@ -223,6 +224,7 @@ const App: React.FC = () => {
     dispatch(fetchProductSuggestions());
     dispatch(fetchPasswordResetRequests());
     dispatch(fetchMonthlyStatements());
+    dispatch(fetchChaosSettings());
   }, [dispatch]);
   
   // Automated Monthly Invoicing

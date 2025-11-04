@@ -1,4 +1,4 @@
-import { Customer, Product, Transaction, Wholesaler, PurchaseOrder, InventoryEvent, LoyaltySettings, GiftCard, DailyReport, Promotion, ProductRequest, ProductSuggestion, PasswordResetRequest, MonthlyStatement } from '../types';
+import { Customer, Product, Transaction, Wholesaler, PurchaseOrder, InventoryEvent, LoyaltySettings, GiftCard, DailyReport, Promotion, ProductRequest, ProductSuggestion, PasswordResetRequest, MonthlyStatement, ChaosSettings } from '../types';
 import { INITIAL_CUSTOMERS, INITIAL_PRODUCTS, INITIAL_WHOLESALERS } from '../constants';
 
 const SIMULATED_LATENCY = 200; // ms
@@ -30,6 +30,49 @@ const defaultLoyaltySettings: LoyaltySettings = {
         { id: 'silver', name: 'Silver', minPoints: 500, pointMultiplier: 1.25, color: '#c0c0c0' },
         { id: 'gold', name: 'Gold', minPoints: 2000, pointMultiplier: 1.5, color: '#ffd700' },
     ]
+};
+
+const defaultChaosSettings: ChaosSettings = {
+    impulseBuy: {
+        enabled: false,
+        discount: 75,
+        duration: 90,
+        frequency: 'daily',
+        eligibleItems: [],
+        startMessage: '⚡ FLASH SALE! ⚡ For the next {SECONDS} seconds, {ITEM_NAME} is {DISCOUNT_PERCENT}% OFF! GO!',
+        endMessage: 'The window is CLOSED! {NUMBER_SOLD} items were claimed.',
+    },
+    pantryLottery: {
+        enabled: false,
+        itemName: 'Mystery Snack',
+        itemPrice: 2.00,
+        eligibleItems: [],
+        jackpotChance: 1,
+        jackpotReward: '10% off your entire month\'s bill!',
+        jackpotMessage: '!!! {USER_NAME} HIT THE JACKPOT !!!',
+    },
+    debtDerby: {
+        enabled: false,
+        showHighRoller: true,
+        showSpenderStreaks: true,
+        showItemFutures: false,
+        leaderboardTitle: 'This Month\'s Esteemed Benefactor',
+        leaderboardCount: 5,
+        streakThreshold: 3,
+        enableSassyAuditor: false,
+        commentFrequency: 'medium',
+    },
+    aiPersonalitySwap: {
+        enabled: false,
+        rotation: 'daily',
+        personalities: [{
+            id: 'p1',
+            name: 'Film Noir Detective',
+            greeting: 'Another day, another tab...',
+            confirmation: 'It\'s on your record, see...',
+            dashboardMessage: 'The numbers don\'t lie, pal...'
+        }],
+    }
 };
 
 
@@ -76,6 +119,7 @@ export const api = {
     productSuggestions: createApiCall<ProductSuggestion[]>('productSuggestions', []),
     passwordResetRequests: createApiCall<PasswordResetRequest[]>('passwordResetRequests', []),
     monthlyStatements: createApiCall<MonthlyStatement[]>('monthlyStatements', []),
+    chaosSettings: createApiCall<ChaosSettings>('chaosSettings', defaultChaosSettings),
 };
 
 // --- Offline Handling ---
