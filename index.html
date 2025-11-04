@@ -34,7 +34,7 @@
         --color-border-subtle: 229 231 235; /* gray-200 */
       }
 
-      .dark, .theme-redbox, .theme-amoled {
+      .dark, .theme-redbox, .theme-amoled, .theme-glassmorphism {
         color-scheme: dark;
       }
 
@@ -90,6 +90,80 @@
         --color-border: 45 45 45; /* dark gray */
         --color-border-subtle: 31 31 31; /* very dark gray */
       }
+
+      .theme-glassmorphism {
+        /* Glassmorphism Theme (Dark) */
+        --color-primary: 199 210 254; /* indigo-300 */
+        --color-primary-hover: 165 180 252; /* indigo-400 */
+        --color-primary-focus-ring: 165 180 252;
+        --color-primary-light: 255 255 255 / 0.15;
+        --color-primary-text-on-light: 224 231 255; /* indigo-200 */
+        --color-text-on-primary: 255 255 255;
+
+        --color-text-base: 243 244 246; /* gray-100 */
+        --color-text-muted: 156 163 175; /* gray-400 */
+        --color-text-subtle: 107 114 128; /* gray-500 */
+
+        /* Core Glass values */
+        --color-bg-base: 17 24 39; /* gray-900 - Fallback */
+        --color-bg-card: 255 255 255 / 0.1;
+        --color-bg-subtle: 255 255 255 / 0.05;
+
+        --color-border: 255 255 255 / 0.2;
+        --color-border-subtle: 255 255 255 / 0.1;
+      }
+      
+      .theme-glassmorphism-bg {
+        background-image: url('https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2550&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+      }
+      .theme-glassmorphism-bg.bg-\[rgb\(var\(--color-bg-base\)\)\] {
+        background-color: transparent;
+      }
+
+      /* Apply general glass effect */
+      .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-card\)\)\],
+      .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-subtle\)\)\] {
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-width: 1px;
+        border-color: rgba(var(--color-border));
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Make popups like dropdowns, modals stand out more */
+      .theme-glassmorphism .z-10,
+      .theme-glassmorphism .z-40,
+      .theme-glassmorphism .z-50 {
+         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      }
+
+      /* Tweak inputs and buttons for better visibility */
+      .theme-glassmorphism input,
+      .theme-glassmorphism select,
+      .theme-glassmorphism textarea {
+        background-color: rgba(var(--color-bg-subtle), 0.8) !important;
+      }
+
+      /* Primary buttons */
+      .theme-glassmorphism .bg-\[rgb\(var\(--color-primary\)\)\] {
+         background-color: rgba(var(--color-primary), 0.3);
+         color: rgb(var(--color-text-base));
+         border: 1px solid rgba(var(--color-primary), 0.4);
+         backdrop-filter: blur(5px);
+         -webkit-backdrop-filter: blur(5px);
+      }
+      .theme-glassmorphism .hover\:bg-\[rgb\(var\(--color-primary-hover\)\)\]:hover {
+        background-color: rgba(var(--color-primary-hover), 0.4);
+        border-color: rgba(var(--color-primary-hover), 0.5);
+      }
+      
+      /* Subtle borders */
+       .theme-glassmorphism .border-b, .theme-glassmorphism .border-t {
+          border-color: rgba(var(--color-border-subtle)) !important;
+       }
 
       *,
       *::before,

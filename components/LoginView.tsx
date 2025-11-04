@@ -23,8 +23,10 @@ export const LoginView: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="w-full max-w-md p-8 space-y-6 bg-[rgb(var(--color-bg-card))] rounded-xl shadow-lg">
+        <div 
+          className="flex items-center justify-center min-h-screen"
+        >
+            <div className="w-full max-w-md p-8 space-y-6 bg-[rgb(var(--color-bg-card))] rounded-xl shadow-2xl">
                 <div>
                     <h1 className="text-3xl font-bold text-center text-[rgb(var(--color-text-base))]">Fridge MV</h1>
                     <p className="mt-2 text-center text-sm text-[rgb(var(--color-text-muted))]">Admin & Customer Login</p>
@@ -39,7 +41,7 @@ export const LoginView: React.FC = () => {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-[rgb(var(--color-border))] placeholder-[rgb(var(--color-text-subtle))] text-[rgb(var(--color-text-base))] rounded-t-md focus:outline-none focus:ring-[rgb(var(--color-primary-focus-ring))] focus:border-[rgb(var(--color-primary-focus-ring))] focus:z-10 sm:text-sm"
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-[rgb(var(--color-border))] placeholder-[rgb(var(--color-text-subtle))] text-[rgb(var(--color-text-base))] rounded-t-md focus:outline-none focus:ring-[rgb(var(--color-primary-focus-ring))] focus:border-[rgb(var(--color-primary-focus-ring))] focus:z-10 sm:text-sm bg-transparent"
                                 placeholder="Username / Redbox ID"
                             />
                         </div>
@@ -51,7 +53,7 @@ export const LoginView: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-[rgb(var(--color-border))] placeholder-[rgb(var(--color-text-subtle))] text-[rgb(var(--color-text-base))] rounded-b-md focus:outline-none focus:ring-[rgb(var(--color-primary-focus-ring))] focus:border-[rgb(var(--color-primary-focus-ring))] focus:z-10 sm:text-sm"
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-[rgb(var(--color-border))] placeholder-[rgb(var(--color-text-subtle))] text-[rgb(var(--color-text-base))] rounded-b-md focus:outline-none focus:ring-[rgb(var(--color-primary-focus-ring))] focus:border-[rgb(var(--color-primary-focus-ring))] focus:z-10 sm:text-sm bg-transparent"
                                 placeholder="Password"
                             />
                         </div>

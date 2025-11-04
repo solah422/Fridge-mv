@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel } from './store/slices/appSlice';
@@ -36,11 +37,11 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '10.8.2';
+const APP_VERSION = '11.0.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
-export type Theme = 'light' | 'dark' | 'redbox' | 'amoled';
+export type Theme = 'light' | 'dark' | 'redbox' | 'amoled' | 'glassmorphism';
 
 const AdminLayout: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -394,7 +395,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove('dark', 'theme-redbox', 'theme-amoled');
+    const appContainer = document.querySelector('.min-h-screen');
+
+    root.classList.remove('dark', 'theme-redbox', 'theme-amoled', 'theme-glassmorphism');
+    if (appContainer) {
+      appContainer.classList.remove('theme-glassmorphism-bg');
+    }
 
     if (theme === 'dark') {
       root.classList.add('dark');
@@ -402,6 +408,11 @@ const App: React.FC = () => {
       root.classList.add('dark', 'theme-redbox');
     } else if (theme === 'amoled') {
       root.classList.add('dark', 'theme-amoled');
+    } else if (theme === 'glassmorphism') {
+      root.classList.add('dark', 'theme-glassmorphism');
+      if (appContainer) {
+        appContainer.classList.add('theme-glassmorphism-bg');
+      }
     }
   }, [theme]);
 
@@ -424,7 +435,7 @@ const App: React.FC = () => {
   return (
     <div className="bg-[rgb(var(--color-bg-base))] min-h-screen font-sans text-[rgb(var(--color-text-base))]">
       <ToastContainer />
-      {showWelcomePanel && <WelcomePanel onClose={() => dispatch(setShowWelcomePanel(false))} />}
+      {showWelcomePanel && <WelcomePanel version={APP_VERSION} onClose={() => dispatch(setShowWelcomePanel(false))} />}
       {renderContent()}
     </div>
   );

@@ -12,6 +12,8 @@ const ThemeIcon: React.FC<{ theme: Theme; className?: string }> = ({ theme, clas
             return <span className={className}>☀️</span>;
         case 'dark':
             return <span className={className}>🌙</span>;
+        case 'glassmorphism':
+            return <span className={className}>🔮</span>;
         case 'redbox':
             return (
                 <svg xmlns="http://www.w3.org/2000/svg" className={`${className} text-red-500`} viewBox="0 0 20 20" fill="currentColor">
@@ -52,6 +54,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ theme, setTheme }) => {
   const themes: { id: Theme; label: string; icon: React.ReactElement }[] = [
     { id: 'light', label: 'Light', icon: <ThemeIcon theme="light" className="h-5 w-5" /> },
     { id: 'dark', label: 'Dark', icon: <ThemeIcon theme="dark" className="h-5 w-5" /> },
+    { id: 'glassmorphism', label: 'Glass', icon: <ThemeIcon theme="glassmorphism" className="h-5 w-5" /> },
     { id: 'redbox', label: 'Redbox', icon: <ThemeIcon theme="redbox" className="h-5 w-5" /> },
     { id: 'amoled', label: 'Amoled', icon: <ThemeIcon theme="amoled" className="h-5 w-5" /> },
   ];

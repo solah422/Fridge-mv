@@ -1,5 +1,15 @@
 export const changelogData = [
-    { version: '10.8.2', date: 'Current', changes: [
+    { version: '11.0.0', date: 'Current', changes: [
+        'Major Feature: Implemented a new "Glassmorphism" UI theme, providing a modern, semi-transparent aesthetic.',
+        'Applied frosted-glass effect to all major UI components including panels, cards, modals, and input fields.',
+        'The theme utilizes a `backdrop-filter` for a blurred background effect, creating a sense of depth.',
+        'Introduced a new dynamic background that is visible through the semi-transparent UI elements.',
+        'Enhanced component borders and shadows to create a "floating" glass feel.',
+        'Updated all buttons, inputs, and interactive elements with theme-consistent hover and focus states.',
+        'Added the new "Glass" theme to the theme switcher in the Settings panel.',
+        'Ensured text and icon legibility across all new transparent components.',
+    ]},
+    { version: '10.8.2', date: 'Previous', changes: [
         'Major Bug Fix: Fixed a critical crash in the Reports view caused by an incorrect Chart.js library setup.',
         'Major Feature: Complete redesign and overhaul of the Reports view into a comprehensive Sales Dashboard.',
         'New: Added date range presets (Today, Last 7 Days, etc.) for quick filtering.',

@@ -3,16 +3,15 @@ import { changelogData } from '../data/changelogData';
 
 interface WelcomePanelProps {
   onClose: () => void;
+  version: string;
 }
 
-const APP_VERSION = '10.4.0';
-
-export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onClose }) => {
+export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onClose, version }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
       <div className="bg-[rgb(var(--color-bg-card))] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div className="p-6 border-b border-[rgb(var(--color-border-subtle))]">
-          <h3 className="text-2xl font-bold text-[rgb(var(--color-text-base))]">Welcome to Fridge MV v{APP_VERSION}</h3>
+          <h3 className="text-2xl font-bold text-[rgb(var(--color-text-base))]">Welcome to Fridge MV v{version}</h3>
           <p className="text-sm text-[rgb(var(--color-text-muted))] mt-1">Here's what's new and improved in the latest version.</p>
         </div>
         <div className="p-6 overflow-y-auto space-y-6">

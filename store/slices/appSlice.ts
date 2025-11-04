@@ -3,7 +3,8 @@ import { RootState } from '..';
 import { Theme } from '../../App';
 import { storageService } from '../../services/storageService'; // Simple sync storage for theme
 
-type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings';
+// FIX: Added 'requests' to the View type to match its usage in App.tsx and fix type comparison errors.
+type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
 
 export interface ForecastingSettings {
   lookbackDays: number;
