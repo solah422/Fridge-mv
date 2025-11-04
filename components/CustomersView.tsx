@@ -3,6 +3,9 @@ import { Customer, Transaction, LoyaltySettings } from '../types';
 import { ManageCustomersModal } from './ManageCustomersModal';
 import { ImportCustomersModal } from './ImportCustomersModal';
 import { LoyaltySettingsView } from './LoyaltySettingsView';
+import { useAppDispatch } from '../store/hooks';
+import { addNotification } from '../store/slices/notificationsSlice';
+import { BulkNotificationModal } from './BulkNotificationModal';
 
 interface CustomersViewProps {
   customers: Customer[];
@@ -31,11 +34,14 @@ const TabButton: React.FC<{ label: string; active: boolean; onClick: () => void 
 
 
 export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCustomersUpdate, transactions, loyaltySettings, onLoyaltySettingsUpdate }) => {
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<'customers' | 'loyalty'>('customers');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState<number[]>([]);
+  const [isBulkNotificationModalOpen, setIsBulkNotificationModalOpen] = useState(false);
 
   const customerData = useMemo(() => {
     return customers.map(customer => {
@@ -78,14 +84,12 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
 
   const handleSaveCustomer = (customerData: Customer | Omit<Customer, 'id'>) => {
     if ('id' in customerData) {
-      // Edit: Merge existing customer data with new data to prevent accidental data loss (e.g., password)
       onCustomersUpdate(customers.map(c => 
         c.id === customerData.id 
           ? { ...c, ...customerData } 
           : c
       ));
     } else {
-      // Add: Modal already provides defaults like loyaltyPoints and createdAt. Just add a unique ID.
       const newCustomer: Customer = { 
           ...customerData, 
           id: Date.now(),
@@ -108,6 +112,48 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
     }));
     onCustomersUpdate([...customers, ...customersWithIds]);
   };
+
+  // --- Bulk Actions Logic ---
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+        setSelectedCustomerIds(filteredCustomers.map(c => c.id));
+    } else {
+        setSelectedCustomerIds([]);
+    }
+  };
+
+  const handleSelectOne = (customerId: number) => {
+    setSelectedCustomerIds(prev =>
+        prev.includes(customerId)
+            ? prev.filter(id => id !== customerId)
+            : [...prev, customerId]
+    );
+  };
+
+  const isAllSelected = filteredCustomers.length > 0 && selectedCustomerIds.length === filteredCustomers.length;
+
+  const handleDeleteSelected = () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedCustomerIds.length} selected customers? This action cannot be undone.`)) {
+        onCustomersUpdate(customers.filter(c => !selectedCustomerIds.includes(c.id)));
+        dispatch(addNotification({ type: 'success', message: `${selectedCustomerIds.length} customers deleted.` }));
+        setSelectedCustomerIds([]);
+    }
+  };
+
+  const handleSendBulkNotification = (message: string) => {
+    const updatedCustomers = customers.map(customer => {
+        if (selectedCustomerIds.includes(customer.id)) {
+            const newNotifications = [...(customer.notifications || []), message];
+            return { ...customer, notifications: newNotifications };
+        }
+        return customer;
+    });
+    onCustomersUpdate(updatedCustomers);
+    dispatch(addNotification({ type: 'success', message: `Notification sent to ${selectedCustomerIds.length} customers.` }));
+    setSelectedCustomerIds([]);
+    setIsBulkNotificationModalOpen(false);
+  };
+
 
   return (
     <>
@@ -147,11 +193,34 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
                             className="w-full max-w-xs p-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]"
                         />
                     </div>
+                    
+                    {selectedCustomerIds.length > 0 && (
+                        <div className="bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-4 flex justify-between items-center">
+                            <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                                {selectedCustomerIds.length} customer(s) selected
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setIsBulkNotificationModalOpen(true)} className="px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-md hover:bg-blue-600">
+                                    Send Notification
+                                </button>
+                                <button onClick={handleDeleteSelected} className="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-md hover:bg-red-600">
+                                    Delete Selected
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
 
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-[rgb(var(--color-border-subtle))]">
                             <thead className="bg-[rgb(var(--color-bg-subtle))]">
                                 <tr>
+                                    <th className="px-2 py-3">
+                                        <input type="checkbox"
+                                               checked={isAllSelected}
+                                               onChange={handleSelectAll}
+                                               className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                                    </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Name</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Contact</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Total Spent</th>
@@ -162,6 +231,12 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
                             <tbody className="bg-[rgb(var(--color-bg-card))] divide-y divide-[rgb(var(--color-border-subtle))]">
                                 {filteredCustomers.map(customer => (
                                     <tr key={customer.id}>
+                                        <td className="px-2 py-4">
+                                            <input type="checkbox"
+                                                   checked={selectedCustomerIds.includes(customer.id)}
+                                                   onChange={() => handleSelectOne(customer.id)}
+                                                   className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                                        </td>
                                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[rgb(var(--color-text-base))]">{customer.name}</td>
                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.email || customer.phone || 'N/A'}</td>
                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">MVR {customer.totalSpent.toFixed(2)}</td>
@@ -196,6 +271,12 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleBulkImport}
+    />
+    <BulkNotificationModal
+        isOpen={isBulkNotificationModalOpen}
+        onClose={() => setIsBulkNotificationModalOpen(false)}
+        onSend={handleSendBulkNotification}
+        selectedCount={selectedCustomerIds.length}
     />
     </>
   );

@@ -354,7 +354,7 @@ const ProfileTab: React.FC = () => {
     const customer = customers.find(c => c.id === user?.id);
     const theme = useAppSelector(selectActiveTheme);
     const activeWallpaper = useAppSelector(selectActiveWallpaper);
-    const APP_VERSION = '14.3.0';
+    const APP_VERSION = '14.4.0';
 
     const [formState, setFormState] = useState({
         name: customer?.name || '',

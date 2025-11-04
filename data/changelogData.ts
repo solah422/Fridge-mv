@@ -1,5 +1,12 @@
 export const changelogData = [
-    { version: '14.3.0', date: 'Current', changes: [
+    { version: '14.4.0', date: 'Current', changes: [
+        'Feature: Implemented Bulk Actions in the Customers view, enabling admins to manage multiple users simultaneously.',
+        'New: Admins can now select multiple customers via checkboxes, with a "Select All" option for efficiency.',
+        'New: A contextual action bar appears when customers are selected, showing the selection count and available actions.',
+        'New Action: "Send Bulk Notification" allows admins to send a custom banner notification to all selected customers.',
+        'New Action: "Delete Selected" allows admins to securely delete multiple customers at once after a confirmation prompt.'
+    ]},
+    { version: '14.3.0', date: 'Previous', changes: [
         'Critical Fix: Implemented full gift card consumption logic. Balances are now correctly debited upon use, and cards are automatically deactivated when their balance reaches zero, preventing reuse.',
         'UI Update: The "My Gift Cards" panel and cart redemption modal now correctly hide used/empty gift cards from the customer\'s dashboard and cart selection.'
     ]},
