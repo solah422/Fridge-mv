@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { selectActiveView, setActiveView, setOnlineStatus } from './store/slices/appSlice';
+import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel } from './store/slices/appSlice';
 import { fetchCustomers, updateCustomers } from './store/slices/customersSlice';
 import { fetchProducts, updateProducts } from './store/slices/productsSlice';
 import { fetchTransactions, saveTransaction } from './store/slices/transactionsSlice';
@@ -29,11 +29,15 @@ import { CustomersView } from './components/CustomersView';
 import { SettingsView } from './components/SettingsView';
 import { DashboardView } from './components/DashboardView';
 import { LoginView } from './components/LoginView';
-import { CustomerPortalView } from './components/CustomerPortalView';
+import { CustomerPortalView } from './CustomerPortalView';
 import { RequestsView } from './components/RequestsView';
 import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
+import { WelcomePanel } from './components/WelcomePanel';
 
+const APP_VERSION = '10.4.0';
+
+// FIX: Added 'requests' to the View type to allow it as a valid view.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
 export type Theme = 'light' | 'dark' | 'redbox' | 'amoled';
 
@@ -186,6 +190,18 @@ const App: React.FC = () => {
   const transactions = useAppSelector(state => state.transactions.items);
   const customers = useAppSelector(state => state.customers.items);
   const monthlyStatements = useAppSelector(state => state.monthlyStatements.items);
+  const showWelcomePanel = useAppSelector(state => state.app.showWelcomePanel);
+
+  // Show welcome panel on login
+  useEffect(() => {
+    if (user) {
+      const welcomeSeen = sessionStorage.getItem(`welcome_seen_${APP_VERSION}`);
+      if (!welcomeSeen) {
+        dispatch(setShowWelcomePanel(true));
+        sessionStorage.setItem(`welcome_seen_${APP_VERSION}`, 'true');
+      }
+    }
+  }, [user, dispatch]);
 
   // Initial data fetch
   useEffect(() => {
@@ -407,6 +423,7 @@ const App: React.FC = () => {
   return (
     <div className="bg-[rgb(var(--color-bg-base))] min-h-screen font-sans text-[rgb(var(--color-text-base))]">
       <ToastContainer />
+      {showWelcomePanel && <WelcomePanel onClose={() => dispatch(setShowWelcomePanel(false))} />}
       {renderContent()}
     </div>
   );

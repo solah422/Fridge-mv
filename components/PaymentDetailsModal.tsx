@@ -31,7 +31,8 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({ isOpen
     const handleSave = () => {
         let updatedTransaction: Transaction = {
             ...transaction,
-            status: 'paid',
+            // FIX: Corrected property name from 'status' to 'paymentStatus' to match the Transaction type.
+            paymentStatus: 'paid',
             paymentMethod: paymentMethod,
         };
 

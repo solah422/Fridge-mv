@@ -1,16 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { logout, selectUser } from '../store/slices/authSlice';
-import { Product, CartItem, Transaction, ProductRequest, ProductSuggestion, MonthlyStatement, Customer } from '../types';
-import { ProductGrid } from './ProductGrid';
-import { saveTransaction } from '../store/slices/transactionsSlice';
-import { ProductRequestModal } from './ProductRequestModal';
-import { ProductSuggestionModal } from './ProductSuggestionModal';
-import { addNotification } from '../store/slices/notificationsSlice';
-import { CustomerLoyaltyView } from './CustomerLoyaltyView';
-import { selectAllMonthlyStatements } from '../store/slices/monthlyStatementsSlice';
-import { MonthlyStatementModal } from './MonthlyStatementModal';
-import { updateCustomers } from '../store/slices/customersSlice';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { logout, selectUser, updateCustomerPassword } from './store/slices/authSlice';
+import { Product, CartItem, Transaction, ProductRequest, ProductSuggestion, MonthlyStatement, Customer } from './types';
+import { ProductGrid } from './components/ProductGrid';
+import { saveTransaction } from './store/slices/transactionsSlice';
+import { ProductRequestModal } from './components/ProductRequestModal';
+import { ProductSuggestionModal } from './components/ProductSuggestionModal';
+import { addNotification } from './store/slices/notificationsSlice';
+import { CustomerLoyaltyView } from './components/CustomerLoyaltyView';
+import { selectAllMonthlyStatements } from './store/slices/monthlyStatementsSlice';
+import { MonthlyStatementModal } from './components/MonthlyStatementModal';
+import { updateCustomers } from './store/slices/customersSlice';
+
+type CustomerPortalTab = 'dashboard' | 'order' | 'history' | 'loyalty' | 'profile';
 
 const CustomerCart: React.FC<{
     cart: CartItem[], 
@@ -59,7 +61,7 @@ const CustomerCart: React.FC<{
     );
 };
 
-const OrderHistory: React.FC = () => {
+const HistoryTab: React.FC = () => {
     const user = useAppSelector(selectUser);
     const transactions = useAppSelector(state => state.transactions.items);
     const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -135,7 +137,7 @@ const OrderHistory: React.FC = () => {
     );
 };
 
-const CustomerDashboard: React.FC<{
+const DashboardTab: React.FC<{
     onOpenRequestModal: () => void;
     onOpenSuggestionModal: () => void;
 }> = ({ onOpenRequestModal, onOpenSuggestionModal }) => {
@@ -292,13 +294,91 @@ const CustomerDashboard: React.FC<{
     );
 };
 
+const ProfileTab: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const user = useAppSelector(selectUser);
+    const customers = useAppSelector(state => state.customers.items);
+    const customer = customers.find(c => c.id === user?.id);
+
+    const [formState, setFormState] = useState({
+        name: customer?.name || '',
+        email: customer?.email || '',
+        phone: customer?.phone || '',
+        address: customer?.address || '',
+    });
+    const [passwordState, setPasswordState] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
+
+    if (!customer) return null;
+
+    const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormState({ ...formState, [e.target.name]: e.target.value });
+    };
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPasswordState({ ...passwordState, [e.target.name]: e.target.value });
+    };
+
+    const handleProfileSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        const updatedCustomer = { ...customer, ...formState };
+        dispatch(updateCustomers(customers.map(c => c.id === customer.id ? updatedCustomer : c)));
+        dispatch(addNotification({ type: 'success', message: 'Profile updated successfully!' }));
+    };
+
+    const handlePasswordSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordState.newPassword !== passwordState.confirmPassword) {
+            dispatch(addNotification({ type: 'error', message: 'New passwords do not match.' }));
+            return;
+        }
+        dispatch(updateCustomerPassword({
+            customerId: customer.id,
+            currentPassword: passwordState.currentPassword,
+            newPassword: passwordState.newPassword
+        })).unwrap().then(() => {
+            setPasswordState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        }).catch(err => {
+            dispatch(addNotification({ type: 'error', message: err.message || 'Failed to update password.' }));
+        });
+    };
+
+    return (
+        <div className="space-y-8 max-w-4xl mx-auto">
+            <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold mb-4">Your Profile</h3>
+                <form onSubmit={handleProfileSave} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label className="block text-sm mb-1">Name</label><input name="name" value={formState.name} onChange={handleProfileChange} className="w-full p-2 border rounded" /></div>
+                        <div><label className="block text-sm mb-1">Email</label><input name="email" type="email" value={formState.email} onChange={handleProfileChange} className="w-full p-2 border rounded" /></div>
+                        <div><label className="block text-sm mb-1">Phone</label><input name="phone" value={formState.phone} onChange={handleProfileChange} className="w-full p-2 border rounded" /></div>
+                        <div><label className="block text-sm mb-1">Address</label><input name="address" value={formState.address} onChange={handleProfileChange} className="w-full p-2 border rounded" /></div>
+                    </div>
+                    <div className="text-right"><button type="submit" className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md">Save Changes</button></div>
+                </form>
+            </div>
+            <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold mb-4">Change Password</h3>
+                <form onSubmit={handlePasswordSave} className="space-y-4 max-w-sm">
+                    <div><label className="block text-sm mb-1">Current Password</label><input name="currentPassword" type="password" value={passwordState.currentPassword} onChange={handlePasswordChange} className="w-full p-2 border rounded" required /></div>
+                    <div><label className="block text-sm mb-1">New Password</label><input name="newPassword" type="password" value={passwordState.newPassword} onChange={handlePasswordChange} className="w-full p-2 border rounded" required /></div>
+                    <div><label className="block text-sm mb-1">Confirm New Password</label><input name="confirmPassword" type="password" value={passwordState.confirmPassword} onChange={handlePasswordChange} className="w-full p-2 border rounded" required /></div>
+                    <div className="text-right"><button type="submit" className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md">Update Password</button></div>
+                </form>
+            </div>
+        </div>
+    );
+};
 
 export const CustomerPortalView: React.FC = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectUser);
     const customers = useAppSelector(state => state.customers.items);
     const products = useAppSelector(state => state.products.items);
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'order' | 'loyalty' | 'history'>('dashboard');
+    const [activeTab, setActiveTab] = useState<CustomerPortalTab>('dashboard');
     
     // State for ordering tab
     const [cart, setCart] = useState<CartItem[]>([]);
@@ -374,7 +454,7 @@ export const CustomerPortalView: React.FC = () => {
         setCart([]);
     };
 
-    const TabButton: React.FC<{ tab: 'dashboard' | 'order' | 'loyalty' | 'history'; label: string }> = ({ tab, label }) => (
+    const TabButton: React.FC<{ tab: CustomerPortalTab; label: string }> = ({ tab, label }) => (
         <button onClick={() => setActiveTab(tab)} className={`px-3 py-2 font-semibold transition-colors rounded-md ${activeTab === tab ? 'bg-[rgb(var(--color-primary-light))] text-[rgb(var(--color-primary-text-on-light))]' : 'hover:bg-[rgb(var(--color-bg-subtle))]'}`}>{label}</button>
     );
 
@@ -387,8 +467,9 @@ export const CustomerPortalView: React.FC = () => {
                     <div className="hidden md:flex items-center gap-2">
                         <TabButton tab="dashboard" label="Dashboard" />
                         <TabButton tab="order" label="Place Order" />
-                        <TabButton tab="loyalty" label="Loyalty" />
                         <TabButton tab="history" label="Order History" />
+                        <TabButton tab="loyalty" label="Loyalty" />
+                        <TabButton tab="profile" label="Profile" />
                     </div>
                     <button onClick={() => dispatch(logout())} className="p-2 rounded-full hover:bg-[rgb(var(--color-bg-subtle))]">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[rgb(var(--color-text-muted))]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -399,7 +480,7 @@ export const CustomerPortalView: React.FC = () => {
             </div>
         </header>
         <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-            {activeTab === 'dashboard' && <CustomerDashboard onOpenRequestModal={() => setIsRequestModalOpen(true)} onOpenSuggestionModal={() => setIsSuggestionModalOpen(true)} />}
+            {activeTab === 'dashboard' && <DashboardTab onOpenRequestModal={() => setIsRequestModalOpen(true)} onOpenSuggestionModal={() => setIsSuggestionModalOpen(true)} />}
             {activeTab === 'order' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2">
@@ -418,14 +499,15 @@ export const CustomerPortalView: React.FC = () => {
                 </div>
             )}
             {activeTab === 'loyalty' && <CustomerLoyaltyView />}
-            {activeTab === 'history' && <OrderHistory />}
+            {activeTab === 'history' && <HistoryTab />}
+            {activeTab === 'profile' && <ProfileTab />}
         </main>
         <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-[rgb(var(--color-bg-card))] shadow-lg z-30">
             <nav className="flex justify-around py-2">
                 <TabButton tab="dashboard" label="Dashboard" />
                 <TabButton tab="order" label="Order" />
-                <TabButton tab="loyalty" label="Loyalty" />
                 <TabButton tab="history" label="History" />
+                <TabButton tab="profile" label="Profile" />
             </nav>
         </footer>
 

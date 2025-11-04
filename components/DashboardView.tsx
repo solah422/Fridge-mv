@@ -128,8 +128,9 @@ export const DashboardView: React.FC = () => {
         );
         dispatch(updateCustomers(updatedCustomers));
         
+        // FIX: Cast 'completed' to its literal type to prevent type widening to 'string'.
         const updatedRequests = passwordResetRequests.map(r => 
-            r.id === requestId ? { ...r, status: 'completed' } : r
+            r.id === requestId ? { ...r, status: 'completed' as 'completed' } : r
         );
         dispatch(updatePasswordResetRequests(updatedRequests));
 

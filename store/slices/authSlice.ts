@@ -110,6 +110,30 @@ export const forceFinancePasswordUpdate = createAsyncThunk(
     }
 );
 
+export const updateCustomerPassword = createAsyncThunk(
+    'auth/updateCustomerPassword',
+    async ({ customerId, currentPassword, newPassword }: { customerId: number, currentPassword: string, newPassword: string }, { getState, dispatch, rejectWithValue }) => {
+        const state = getState() as RootState;
+        const customers = state.customers.items;
+        const customer = customers.find(c => c.id === customerId);
+
+        if (!customer) {
+            return rejectWithValue('Customer not found.');
+        }
+        if (customer.password !== currentPassword) {
+            return rejectWithValue('Current password does not match.');
+        }
+
+        const updatedCustomer = { ...customer, password: newPassword };
+        const updatedCustomers = customers.map(c => c.id === customerId ? updatedCustomer : c);
+        
+        await dispatch(updateCustomers(updatedCustomers));
+        dispatch(addNotification({ type: 'success', message: 'Password updated successfully.'}));
+        return;
+    }
+);
+
+
 export const requestPasswordReset = createAsyncThunk(
     'auth/requestPasswordReset',
     async (identifier: string, { getState, dispatch, rejectWithValue }) => {

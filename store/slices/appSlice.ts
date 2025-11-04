@@ -22,6 +22,7 @@ interface AppState {
   forecastingSettings: ForecastingSettings;
   creditSettings: CreditSettings;
   companyLogo: string | null;
+  showWelcomePanel: boolean;
 }
 
 // Keep theme in localStorage for persistence across sessions, as it's a UI preference
@@ -44,6 +45,7 @@ const initialState: AppState = {
   forecastingSettings: savedForecastingSettings,
   creditSettings: savedCreditSettings,
   companyLogo: savedLogo,
+  showWelcomePanel: false,
 };
 
 const appSlice = createSlice({
@@ -71,11 +73,14 @@ const appSlice = createSlice({
     setCompanyLogo(state, action: PayloadAction<string | null>) {
       state.companyLogo = action.payload;
       storageService.setItem('companyLogo', action.payload);
+    },
+    setShowWelcomePanel(state, action: PayloadAction<boolean>) {
+      state.showWelcomePanel = action.payload;
     }
   },
 });
 
-export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo } = appSlice.actions;
+export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo, setShowWelcomePanel } = appSlice.actions;
 
 export const selectActiveView = (state: RootState) => state.app.activeView;
 export const selectForecastingSettings = (state: RootState) => state.app.forecastingSettings;
