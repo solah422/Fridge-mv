@@ -1,0 +1,86 @@
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '..';
+import { Theme } from '../../App';
+import { storageService } from '../../services/storageService'; // Simple sync storage for theme
+
+type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings';
+
+export interface ForecastingSettings {
+  lookbackDays: number;
+  reorderThresholdDays: number;
+}
+
+export interface CreditSettings {
+  defaultCreditLimit: number;
+  creditLimitIncreaseCap: number;
+}
+
+interface AppState {
+  activeView: View;
+  theme: Theme;
+  isOnline: boolean;
+  forecastingSettings: ForecastingSettings;
+  creditSettings: CreditSettings;
+  companyLogo: string | null;
+}
+
+// Keep theme in localStorage for persistence across sessions, as it's a UI preference
+const savedTheme = storageService.getItem<Theme>('theme', 'dark');
+const savedForecastingSettings = storageService.getItem<ForecastingSettings>('forecastingSettings', {
+  lookbackDays: 30,
+  reorderThresholdDays: 7,
+});
+const savedCreditSettings = storageService.getItem<CreditSettings>('creditSettings', {
+  defaultCreditLimit: 500,
+  creditLimitIncreaseCap: 5000,
+});
+const savedLogo = storageService.getItem<string | null>('companyLogo', null);
+
+
+const initialState: AppState = {
+  activeView: 'dashboard',
+  theme: savedTheme,
+  isOnline: navigator.onLine,
+  forecastingSettings: savedForecastingSettings,
+  creditSettings: savedCreditSettings,
+  companyLogo: savedLogo,
+};
+
+const appSlice = createSlice({
+  name: 'app',
+  initialState,
+  reducers: {
+    setActiveView(state, action: PayloadAction<View>) {
+      state.activeView = action.payload;
+    },
+    setTheme(state, action: PayloadAction<Theme>) {
+      state.theme = action.payload;
+      storageService.setItem('theme', action.payload);
+    },
+    setOnlineStatus(state, action: PayloadAction<boolean>) {
+        state.isOnline = action.payload;
+    },
+    setForecastingSettings(state, action: PayloadAction<Partial<ForecastingSettings>>) {
+      state.forecastingSettings = { ...state.forecastingSettings, ...action.payload };
+      storageService.setItem('forecastingSettings', state.forecastingSettings);
+    },
+    setCreditSettings(state, action: PayloadAction<Partial<CreditSettings>>) {
+      state.creditSettings = { ...state.creditSettings, ...action.payload };
+      storageService.setItem('creditSettings', state.creditSettings);
+    },
+    setCompanyLogo(state, action: PayloadAction<string | null>) {
+      state.companyLogo = action.payload;
+      storageService.setItem('companyLogo', action.payload);
+    }
+  },
+});
+
+export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo } = appSlice.actions;
+
+export const selectActiveView = (state: RootState) => state.app.activeView;
+export const selectForecastingSettings = (state: RootState) => state.app.forecastingSettings;
+export const selectCreditSettings = (state: RootState) => state.app.creditSettings;
+export const selectCompanyLogo = (state: RootState) => state.app.companyLogo;
+
+
+export default appSlice.reducer;

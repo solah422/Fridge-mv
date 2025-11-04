@@ -1,0 +1,5 @@
+{
+  "name": "Fridge MV",
+  "description": "A modern Point of Sale (POS) application that allows users to manage customers and products, add products to a cart, save transactions, and generate shareable invoices.",
+  "requestFramePermissions": []
+}

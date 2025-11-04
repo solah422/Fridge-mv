@@ -1,0 +1,61 @@
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { ProductRequest } from '../../types';
+import { api } from '../../services/apiService';
+import { RootState } from '..';
+
+interface ProductRequestsState {
+  items: ProductRequest[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+}
+
+const initialState: ProductRequestsState = {
+  items: [],
+  status: 'idle',
+};
+
+export const fetchProductRequests = createAsyncThunk('productRequests/fetch', async () => {
+  return await api.productRequests.fetch();
+});
+
+export const updateProductRequests = createAsyncThunk('productRequests/update', async (requests: ProductRequest[]) => {
+    await api.productRequests.save(requests);
+    return requests;
+});
+
+export const addProductRequest = createAsyncThunk(
+    'productRequests/add',
+    async (requestData: Omit<ProductRequest, 'id' | 'createdAt' | 'status'>, { getState }) => {
+        const state = getState() as RootState;
+        const newRequest: ProductRequest = {
+            ...requestData,
+            id: `REQ-${Date.now()}`,
+            createdAt: new Date().toISOString(),
+            status: 'pending',
+        };
+        const updatedRequests = [...state.productRequests.items, newRequest];
+        await api.productRequests.save(updatedRequests);
+        return newRequest;
+    }
+);
+
+const productRequestsSlice = createSlice({
+  name: 'productRequests',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchProductRequests.fulfilled, (state, action: PayloadAction<ProductRequest[]>) => {
+        state.items = action.payload;
+        state.status = 'succeeded';
+      })
+      .addCase(updateProductRequests.fulfilled, (state, action: PayloadAction<ProductRequest[]>) => {
+        state.items = action.payload;
+      })
+      .addCase(addProductRequest.fulfilled, (state, action: PayloadAction<ProductRequest>) => {
+        state.items.push(action.payload);
+      });
+  },
+});
+
+export const selectAllProductRequests = (state: RootState) => state.productRequests.items;
+export default productRequestsSlice.reducer;
