@@ -32,6 +32,7 @@ import { LoginView } from './components/LoginView';
 import { CustomerPortalView } from './components/CustomerPortalView';
 import { RequestsView } from './components/RequestsView';
 import { ToastContainer } from './components/ToastContainer';
+import { FinanceLayout } from './components/FinanceLayout';
 
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
 export type Theme = 'light' | 'dark' | 'redbox' | 'amoled';
@@ -396,6 +397,9 @@ const App: React.FC = () => {
     }
     if (user.role === 'customer') {
       return <CustomerPortalView />;
+    }
+    if (user.role === 'finance') {
+      return <FinanceLayout />;
     }
     return null;
   }

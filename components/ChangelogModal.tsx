@@ -6,7 +6,18 @@ interface ChangelogModalProps {
 }
 
 const changelogData = [
-    { version: '9.5.0', date: 'Current', changes: [
+    { version: '10.0.0', date: 'Current', changes: [
+        'Major Feature: Implemented a new high-level "Finance Manager" user role.',
+        'Created a default Finance Manager account (Username: Finance, Password: test).',
+        'Implemented a mandatory password change prompt upon first login for the new role to ensure security.',
+        'Developed a dedicated Finance Dashboard focused on financial oversight, collections, and reporting.',
+        'Added a detailed, filterable Invoice Management Center for viewing and managing all monthly statements.',
+        'Integrated Collection Tools, allowing the Finance Manager to send payment reminders to customers, which generate high-priority notifications on the customer\'s dashboard.',
+        'Enabled quick editing of customer contact details directly from the finance dashboard.',
+        'Created a Financial Reporting Suite with an Aged Receivables Report and a summary of total outstanding debt.',
+        'Added a dedicated "Account Settings" page for the Finance Manager to change their password.'
+    ]},
+    { version: '9.5.0', date: 'Previous', changes: [
         'Major Feature: Professional Document & Brand Redesign.',
         'Completely redesigned the Invoice, Purchase Order, and Monthly Statement templates to a modern, clean, and professional aesthetic.',
         'Updated the Gift Card design to align with the new branding for a cohesive customer experience.',

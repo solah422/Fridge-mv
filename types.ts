@@ -16,6 +16,7 @@ export interface Customer {
   createdAt?: string;
   maximumCreditLimit?: number;
   creditBlocked?: boolean;
+  notifications?: string[];
 }
 
 export interface Product {

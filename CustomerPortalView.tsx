@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout, selectUser } from '../store/slices/authSlice';
-import { Product, CartItem, Transaction, ProductRequest, ProductSuggestion, MonthlyStatement } from '../types';
+import { Product, CartItem, Transaction, ProductRequest, ProductSuggestion, MonthlyStatement, Customer } from '../types';
 import { ProductGrid } from './ProductGrid';
 import { saveTransaction } from '../store/slices/transactionsSlice';
 import { ProductRequestModal } from './ProductRequestModal';
@@ -10,6 +10,7 @@ import { addNotification } from '../store/slices/notificationsSlice';
 import { CustomerLoyaltyView } from './CustomerLoyaltyView';
 import { selectAllMonthlyStatements } from '../store/slices/monthlyStatementsSlice';
 import { MonthlyStatementModal } from './MonthlyStatementModal';
+import { updateCustomers } from '../store/slices/customersSlice';
 
 const CustomerCart: React.FC<{
     cart: CartItem[], 
@@ -138,7 +139,10 @@ const CustomerDashboard: React.FC<{
     onOpenRequestModal: () => void;
     onOpenSuggestionModal: () => void;
 }> = ({ onOpenRequestModal, onOpenSuggestionModal }) => {
+    const dispatch = useAppDispatch();
     const user = useAppSelector(selectUser);
+    const allCustomers = useAppSelector(state => state.customers.items);
+    const customer = allCustomers.find(c => c.id === user?.id);
     const transactions = useAppSelector(state => state.transactions.items);
     const products = useAppSelector(state => state.products.items);
     const requests = useAppSelector(state => state.productRequests.items);
@@ -181,6 +185,15 @@ const CustomerDashboard: React.FC<{
         .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), 
     [requests, suggestions, user]);
     
+    const handleDismissNotification = (index: number) => {
+        if (!customer) return;
+        const newNotifications = [...(customer.notifications || [])];
+        newNotifications.splice(index, 1);
+        const updatedCustomer: Customer = { ...customer, notifications: newNotifications };
+        const updatedCustomerList = allCustomers.map(c => c.id === customer.id ? updatedCustomer : c);
+        dispatch(updateCustomers(updatedCustomerList));
+    };
+
     const StatusBadge: React.FC<{ status: ProductRequest['status'] }> = ({ status }) => {
         const colorClasses = { pending: 'bg-yellow-100 text-yellow-800', approved: 'bg-green-100 text-green-800', denied: 'bg-red-100 text-red-800', contacted: 'bg-blue-100 text-blue-800' };
         return <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${colorClasses[status]}`}>{status}</span>;
@@ -188,6 +201,22 @@ const CustomerDashboard: React.FC<{
 
     return (
         <>
+        {(customer?.notifications || []).map((notif, index) => (
+             <div key={index} className="bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-500 text-blue-800 dark:text-blue-200 p-4 rounded-lg shadow-md mb-6" role="alert">
+                <div className="flex items-start">
+                    <div className="py-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 mr-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                    </div>
+                    <div className="flex-grow">
+                        <p className="font-bold">Notification</p>
+                        <p className="text-sm">{notif}</p>
+                    </div>
+                    <button onClick={() => handleDismissNotification(index)} className="p-1 rounded-full hover:bg-black/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+        ))}
         {overdueStatement && (
              <div className="bg-red-100 dark:bg-red-900/50 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 rounded-lg shadow-md mb-6" role="alert">
                 <div className="flex items-start">

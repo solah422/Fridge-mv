@@ -53,6 +53,12 @@ const createApiCall = <T>(key: string, defaultValue: T): {
     }),
 });
 
+interface AuthData {
+    adminPassword: string;
+    financePassword: string;
+    financePasswordChanged: boolean;
+}
+
 // Create API endpoints for each data type
 export const api = {
     customers: createApiCall<Customer[]>('customers', INITIAL_CUSTOMERS),
@@ -65,7 +71,7 @@ export const api = {
     giftCards: createApiCall<GiftCard[]>('giftCards', []),
     dailyReports: createApiCall<DailyReport[]>('dailyReports', []),
     promotions: createApiCall<Promotion[]>('promotions', []),
-    auth: createApiCall<{ adminPassword: string }>('auth_data', { adminPassword: 'admin' }),
+    auth: createApiCall<AuthData>('auth_data', { adminPassword: 'admin', financePassword: 'test', financePasswordChanged: false }),
     productRequests: createApiCall<ProductRequest[]>('productRequests', []),
     productSuggestions: createApiCall<ProductSuggestion[]>('productSuggestions', []),
     passwordResetRequests: createApiCall<PasswordResetRequest[]>('passwordResetRequests', []),

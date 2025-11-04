@@ -7,10 +7,12 @@ import { updateCustomers } from './customersSlice';
 import { addPasswordResetRequest } from './passwordResetSlice';
 import { addNotification } from './notificationsSlice';
 
-type UserRole = 'admin' | 'customer';
+// FIX: Add 'finance' role.
+type UserRole = 'admin' | 'customer' | 'finance';
 
 interface User {
-    id: number | 'admin';
+    // FIX: Add 'finance' id type.
+    id: number | 'admin' | 'finance';
     username: string;
     role: UserRole;
     name?: string; // for customers
@@ -37,13 +39,23 @@ export const login = createAsyncThunk(
         const state = getState() as RootState;
         const customers = state.customers.items;
         
+        const { adminPassword, financePassword } = await api.auth.fetch();
+
         // Check for admin
         if (username.toLowerCase() === 'admin') {
-            const { adminPassword } = await api.auth.fetch();
             if (password === adminPassword) {
                 const adminUser: User = { id: 'admin', username: 'admin', role: 'admin' };
                 storageService.setItem('user', adminUser);
                 return adminUser;
+            }
+        }
+        
+        // FIX: Add login logic for finance role.
+        if (username.toLowerCase() === 'finance') {
+            if (password === financePassword) {
+                const financeUser: User = { id: 'finance', username: 'finance', role: 'finance', name: 'Finance Manager' };
+                storageService.setItem('user', financeUser);
+                return financeUser;
             }
         }
         
@@ -66,7 +78,34 @@ export const updateAdminPassword = createAsyncThunk(
         if (authData.adminPassword !== currentPassword) {
             return rejectWithValue('Current password does not match.');
         }
-        await api.auth.save({ adminPassword: newPassword });
+        // FIX: The original code was saving a partial object. Now it saves the full object with the updated password to fix the type error.
+        await api.auth.save({ ...authData, adminPassword: newPassword });
+        return;
+    }
+);
+
+// FIX: Added new thunk for finance user to update password.
+export const updateFinancePassword = createAsyncThunk(
+    'auth/updateFinancePassword',
+    async ({ currentPassword, newPassword }: { currentPassword: string, newPassword: string }, { rejectWithValue }) => {
+        const authData = await api.auth.fetch();
+        if (authData.financePassword !== currentPassword) {
+            return rejectWithValue('Current password does not match.');
+        }
+        await api.auth.save({ ...authData, financePassword: newPassword });
+        return;
+    }
+);
+
+// FIX: Added new thunk for mandatory password update for finance user.
+export const forceFinancePasswordUpdate = createAsyncThunk(
+    'auth/forceFinancePasswordUpdate',
+    async ({ currentPassword, newPassword }: { currentPassword: string, newPassword: string }, { rejectWithValue }) => {
+        const authData = await api.auth.fetch();
+        if (authData.financePassword !== currentPassword) {
+            return rejectWithValue('Invalid temporary password. Please contact an admin.');
+        }
+        await api.auth.save({ ...authData, financePassword: newPassword, financePasswordChanged: true });
         return;
     }
 );
