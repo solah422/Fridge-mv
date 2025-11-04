@@ -89,7 +89,8 @@ const InvoicesList: React.FC = () => {
           }
     
           if (issueStoreCredit && totalReturnValue > 0) {
-              const newCard = await dispatch(createGiftCard({ initialBalance: totalReturnValue, isEnabled: true, customerId: transactionToUpdate.customer.id })).unwrap();
+              // FIX: Removed the 'isEnabled' property from the createGiftCard dispatch call as it is not part of the expected payload and is handled within the thunk, resolving the TypeScript error.
+              const newCard = await dispatch(createGiftCard({ initialBalance: totalReturnValue, customerId: transactionToUpdate.customer.id })).unwrap();
               dispatch(addNotification({ type: 'success', message: `Store credit issued on new Gift Card: ${newCard.id}`}));
               
               // Add a notification to the customer's profile

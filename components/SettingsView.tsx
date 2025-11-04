@@ -12,7 +12,7 @@ import { MaterialYouSettings } from './MaterialYouSettings';
 import { WallpaperGallery } from './WallpaperGallery';
 import { ChaosAndFunView } from './ChaosAndFunView';
 
-const APP_VERSION = '13.0.0';
+const APP_VERSION = '14.1.0';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'chaos' | 'about';
 

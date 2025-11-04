@@ -75,7 +75,7 @@ export interface Transaction {
   date: string;
   paymentStatus: 'paid' | 'unpaid';
   orderStatus: 'Pending' | 'Out for Delivery' | 'Delivered';
-  paymentMethod?: 'cash' | 'card' | 'transfer' | 'gift_card' | 'multiple';
+  paymentMethod?: 'cash' | 'card' | 'transfer' | 'gift_card' | 'multiple' | 'unpaid';
   giftCardPayments?: GiftCardPayment[];
   paymentDate?: string;
   paymentReceiptUrl?: string; // base64 data URL
@@ -129,7 +129,8 @@ export interface GiftCard {
     currentBalance: number;
     createdAt: string;
     isEnabled: boolean;
-    customerId?: number; // Optional link to a customer
+    customerId: number; // No longer optional
+    expiryDate?: string; // Optional expiry date
 }
 
 export interface DailyReport {

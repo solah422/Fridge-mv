@@ -65,7 +65,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, onClose, on
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-40">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-40 p-4 sm:p-6 lg:p-8">
         <div className="bg-[rgb(var(--color-bg-card))] rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
           <div className="p-4 border-b border-[rgb(var(--color-border-subtle))] flex justify-between items-center">
             <h3 className="text-xl font-bold text-[rgb(var(--color-text-base))]">Invoice Details</h3>

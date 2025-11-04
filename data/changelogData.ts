@@ -1,5 +1,9 @@
 export const changelogData = [
-    { version: '14.0.0', date: 'Current', changes: [
+    { version: '14.1.0', date: 'Current', changes: [
+        'Major Feature: Implemented an end-to-end Customer Gift Card Management System, including admin generation, a customer dashboard panel, and a new cart redemption flow.',
+        'Visual Tweak: Displayed the app version number on the login screen for easier reference.',
+    ]},
+    { version: '14.0.0', date: 'Previous', changes: [
         'New Feature: Added the "Item Bounty Board" to the Chaos & Fun module. Users can now post and contribute to bounties for out-of-stock items.',
         'New Feature: Added the "POS Mascot (Cat)" to the Chaos & Fun module. A shared digital pet whose mood is influenced by office purchases and financial health.',
         'Both new features are fully configurable from the Admin Settings panel.',

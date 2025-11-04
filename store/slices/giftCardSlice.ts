@@ -26,7 +26,7 @@ export const saveGiftCards = createAsyncThunk('giftCards/saveGiftCards', async (
 
 export const createGiftCard = createAsyncThunk(
     'giftCards/createGiftCard',
-    async (cardData: Omit<GiftCard, 'id' | 'createdAt' | 'currentBalance'>, { getState }) => {
+    async (cardData: { initialBalance: number; customerId: number; expiryDate?: string; }, { getState }) => {
         const state = getState() as RootState;
         const newCard: GiftCard = {
             id: `GC-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
@@ -35,6 +35,7 @@ export const createGiftCard = createAsyncThunk(
             currentBalance: cardData.initialBalance,
             isEnabled: true,
             customerId: cardData.customerId,
+            expiryDate: cardData.expiryDate,
         };
         const updatedCards = [...state.giftCards.items, newCard];
         await api.giftCards.save(updatedCards);

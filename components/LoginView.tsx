@@ -26,7 +26,7 @@ export const LoginView: React.FC = () => {
         <div 
           className="flex items-center justify-center min-h-screen"
         >
-            <div className="w-full max-w-md p-8 space-y-6 bg-[rgb(var(--color-bg-card))] rounded-xl shadow-2xl">
+            <div className="relative w-full max-w-md p-8 space-y-6 bg-[rgb(var(--color-bg-card))] rounded-xl shadow-2xl">
                 <div>
                     <h1 className="text-3xl font-bold text-center text-[rgb(var(--color-text-base))]">Fridge MV</h1>
                     <p className="mt-2 text-center text-sm text-[rgb(var(--color-text-muted))]">Admin & Customer Login</p>
@@ -94,6 +94,9 @@ export const LoginView: React.FC = () => {
                         Register here
                     </button>
                 </p>
+                <div className="absolute bottom-3 right-5 text-xs text-[rgb(var(--color-text-subtle))]">
+                    v14.1.0
+                </div>
             </div>
 
             <ForgotPasswordModal isOpen={isForgotModalOpen} onClose={() => setIsForgotModalOpen(false)} />
