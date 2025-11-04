@@ -34,7 +34,7 @@
         --color-border-subtle: 229 231 235; /* gray-200 */
       }
 
-      .dark, .theme-redbox, .theme-amoled, .theme-glassmorphism, .theme-material-you, .theme-adaptive-aura {
+      .dark, .theme-redbox, .theme-amoled, .theme-material-you, .theme-glassmorphism {
         color-scheme: dark;
       }
 
@@ -90,79 +90,6 @@
         --color-border: 45 45 45; /* dark gray */
         --color-border-subtle: 31 31 31; /* very dark gray */
       }
-
-      .theme-glassmorphism {
-        /* Glassmorphism Theme (Dark) */
-        --color-primary: 199 210 254; /* indigo-300 */
-        --color-primary-hover: 165 180 252; /* indigo-400 */
-        --color-primary-focus-ring: 165 180 252;
-        --color-primary-light: 255 255 255 / 0.15;
-        --color-primary-text-on-light: 224 231 255; /* indigo-200 */
-        --color-text-on-primary: 255 255 255;
-
-        --color-text-base: 243 244 246; /* gray-100 */
-        --color-text-muted: 156 163 175; /* gray-400 */
-        --color-text-subtle: 107 114 128; /* gray-500 */
-
-        /* Core Glass values */
-        --color-bg-base: 17 24 39; /* gray-900 - Fallback */
-        --color-bg-card: 255 255 255 / 0.15;
-        --color-bg-subtle: 255 255 255 / 0.08;
-
-        --color-border: 255 255 255 / 0.2;
-        --color-border-subtle: 255 255 255 / 0.1;
-      }
-      
-      .theme-glassmorphism-bg-dynamic {
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-      }
-      .theme-glassmorphism-bg-dynamic.bg-\[rgb\(var\(--color-bg-base\)\)\] {
-        background-color: transparent;
-      }
-
-      /* Apply general glass effect */
-      .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-card\)\)\],
-      .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-subtle\)\)\] {
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-width: 1px;
-        border-color: rgba(var(--color-border));
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      }
-      
-      /* Make popups like dropdowns, modals stand out more */
-      .theme-glassmorphism .z-10,
-      .theme-glassmorphism .z-40,
-      .theme-glassmorphism .z-50 {
-         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-      }
-
-      /* Tweak inputs and buttons for better visibility */
-      .theme-glassmorphism input,
-      .theme-glassmorphism select,
-      .theme-glassmorphism textarea {
-        background-color: rgba(var(--color-bg-subtle), 0.8) !important;
-      }
-
-      /* Primary buttons */
-      .theme-glassmorphism .bg-\[rgb\(var\(--color-primary\)\)\] {
-         background-color: rgba(var(--color-primary), 0.3);
-         color: rgb(var(--color-text-base));
-         border: 1px solid rgba(var(--color-primary), 0.4);
-         backdrop-filter: blur(5px);
-         -webkit-backdrop-filter: blur(5px);
-      }
-      .theme-glassmorphism .hover\:bg-\[rgb\(var\(--color-primary-hover\)\)\]:hover {
-        background-color: rgba(var(--color-primary-hover), 0.4);
-        border-color: rgba(var(--color-primary-hover), 0.5);
-      }
-      
-      /* Subtle borders */
-       .theme-glassmorphism .border-b, .theme-glassmorphism .border-t {
-          border-color: rgba(var(--color-border-subtle)) !important;
-       }
       
       .theme-material-you {
         /* Placeholder variables, will be dynamically replaced by JS */
@@ -204,74 +131,74 @@
         box-shadow: none;
       }
 
-      /* --- Adaptive Aura Theme --- */
-      .theme-adaptive-aura {
-        /* This theme is controlled by JS-injected variables. Fallbacks are from the default dark theme. */
-        --aura-bg-transparency: 1;
-        --aura-bg-blur: 0px;
-        --aura-radius: 8px;
-        --aura-transition-duration: 300ms;
+      /* Glassmorphism Theme */
+      .theme-glassmorphism {
+        --color-primary: 209 213 219; /* gray-300 */
+        --color-primary-hover: 255 255 255;
+        --color-primary-focus-ring: 255 255 255;
+        --color-primary-light: 120 120 120;
+        --color-primary-text-on-light: 255 255 255;
+        --color-text-on-primary: 17 24 39; /* gray-900 */
 
-        /* Remap base colors to aura colors */
-        --color-primary: var(--aura-primary-rgb, 129 140 248);
-        --color-primary-hover: var(--aura-primary-hover-rgb, 99 102 241);
-        --color-primary-focus-ring: var(--aura-focus-ring-rgb, 165 180 252);
-        --color-primary-light: var(--aura-primary-light-rgb, 49 46 129);
-        --color-primary-text-on-light: var(--aura-text-on-primary-rgb, 199 210 254);
-        --color-text-on-primary: var(--aura-text-on-primary-rgb, 255 255 255);
-        --color-text-base: var(--aura-text-base-rgb, 229 231 235);
-        --color-text-muted: var(--aura-text-muted-rgb, 156 163 175);
-        --color-text-subtle: var(--aura-text-subtle-rgb, 107 114 128);
-        --color-bg-base: var(--aura-bg-base-rgb, 17 24 39);
-        --color-bg-card: var(--aura-bg-card-rgb, 31 41 55);
-        --color-bg-subtle: var(--aura-bg-subtle-rgb, 55 65 81);
-        --color-border: var(--aura-border-rgb, 75 85 99);
-        --color-border-subtle: var(--aura-border-subtle-rgb, 55 65 81);
-
-        /* Remap spacing based on density */
-        --tw-space-x-1: var(--aura-sp-1, 0.25rem);
-        --tw-space-y-1: var(--aura-sp-1, 0.25rem);
-        --tw-space-x-2: var(--aura-sp-2, 0.5rem);
-        --tw-space-y-2: var(--aura-sp-2, 0.5rem);
-        --tw-space-x-3: var(--aura-sp-3, 0.75rem);
-        --tw-space-y-3: var(--aura-sp-3, 0.75rem);
-        --tw-space-x-4: var(--aura-sp-4, 1rem);
-        --tw-space-y-4: var(--aura-sp-4, 1rem);
-        --tw-space-x-6: var(--aura-sp-6, 1.5rem);
-        --tw-space-y-6: var(--aura-sp-6, 1.5rem);
+        --color-text-base: 243 244 246; /* gray-100 */
+        --color-text-muted: 175 185 200;
+        --color-text-subtle: 156 163 175; /* gray-400 */
       }
-
-      .theme-adaptive-aura.bg-\[rgb\(var\(--color-bg-base\)\)\] {
-        background-color: rgba(var(--color-bg-base)) !important;
+      .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-base\)\] {
+        background-color: transparent !important;
       }
-      .theme-adaptive-aura .bg-\[rgb\(var\(--color-bg-card\)\)\],
-      .theme-adaptive-aura .bg-\[rgb\(var\(--color-bg-subtle\)\)\] {
-        backdrop-filter: blur(var(--aura-bg-blur));
-        -webkit-backdrop-filter: blur(var(--aura-bg-blur));
+      .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-card\)\)\],
+      .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-subtle\)\)\] {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
       }
-       .theme-adaptive-aura .bg-\[rgb\(var\(--color-bg-card\)\)\] {
-        background-color: rgba(var(--color-bg-card), var(--aura-bg-transparency)) !important;
-       }
-       .theme-adaptive-aura .bg-\[rgb\(var\(--color-bg-subtle\)\)\] {
-        background-color: rgba(var(--color-bg-subtle), var(--aura-bg-transparency)) !important;
-       }
-
-      /* Apply global radius to Tailwind classes */
-      .theme-adaptive-aura .rounded-md { border-radius: var(--aura-radius); }
-      .theme-adaptive-aura .rounded-lg { border-radius: calc(var(--aura-radius) * 1.33)); }
-      .theme-adaptive-aura .rounded-xl { border-radius: calc(var(--aura-radius) * 1.66)); }
-      .theme-adaptive-aura .rounded-t-md { border-top-left-radius: var(--aura-radius); border-top-right-radius: var(--aura-radius); }
-      .theme-adaptive-aura .rounded-b-md { border-bottom-left-radius: var(--aura-radius); border-bottom-right-radius: var(--aura-radius); }
-
-      /* Spacing for padding */
-      .theme-adaptive-aura .p-1 { padding: var(--aura-sp-1); }
-      .theme-adaptive-aura .p-2 { padding: var(--aura-sp-2); }
-      .theme-adaptive-aura .p-3 { padding: var(--aura-sp-3); }
-      .theme-adaptive-aura .p-4 { padding: var(--aura-sp-4); }
-      .theme-adaptive-aura .p-6 { padding: var(--aura-sp-6); }
-      .theme-adaptive-aura .px-4 { padding-left: var(--aura-sp-4); padding-right: var(--aura-sp-4); }
-      .theme-adaptive-aura .py-2 { padding-top: var(--aura-sp-2); padding-bottom: var(--aura-sp-2); }
-
+      .theme-glassmorphism header {
+        background-color: rgba(28, 38, 54, 0.25) !important;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom-width: 1px;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1);
+      }
+      .theme-glassmorphism input,
+      .theme-glassmorphism select,
+      .theme-glassmorphism textarea {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.25) !important;
+        color: rgb(var(--color-text-base)) !important;
+      }
+      .theme-glassmorphism input::placeholder {
+        color: rgb(var(--color-text-subtle));
+      }
+      .theme-glassmorphism input:focus,
+      .theme-glassmorphism select:focus,
+      .theme-glassmorphism textarea:focus {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        box-shadow: none !important;
+        --tw-ring-shadow: none !important;
+      }
+      .theme-glassmorphism button.bg-\[rgb\(var\(--color-primary\)\)\] {
+        background-color: rgba(var(--color-primary), 0.8) !important;
+        color: rgb(var(--color-text-on-primary)) !important;
+        transition: background-color 0.4s ease, transform 0.3s ease !important;
+      }
+      .theme-glassmorphism button.bg-\[rgb\(var\(--color-primary\)\)\]:hover {
+        background-color: rgba(var(--color-primary-hover), 1) !important;
+        transform: translateY(-2px);
+      }
+      .theme-glassmorphism ::-webkit-scrollbar { width: 8px; height: 8px; }
+      .theme-glassmorphism ::-webkit-scrollbar-track { background: transparent; }
+      .theme-glassmorphism ::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.25);
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+      .theme-glassmorphism ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.4); }
 
       *,
       *::before,
@@ -279,11 +206,6 @@
         transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow;
         transition-duration: 300ms;
         transition-timing-function: ease-in-out;
-      }
-      .theme-adaptive-aura *,
-      .theme-adaptive-aura *::before,
-      .theme-adaptive-aura *::after {
-        transition-duration: var(--aura-transition-duration, 300ms);
       }
     </style>
   <script type="importmap">

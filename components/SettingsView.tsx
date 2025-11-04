@@ -8,9 +8,8 @@ import { PromotionsView } from './PromotionsView';
 import { updateAdminPassword } from '../store/slices/authSlice';
 import { addNotification } from '../store/slices/notificationsSlice';
 import { AboutPanel } from './AboutPanel';
-import { WallpaperGallery } from './WallpaperGallery';
 import { MaterialYouSettings } from './MaterialYouSettings';
-import { AuraConfigurationPanel } from './AuraConfigurationPanel';
+import { WallpaperGallery } from './WallpaperGallery';
 
 const APP_VERSION = '12.0.0';
 
@@ -190,9 +189,9 @@ const BrandingSettings: React.FC = () => {
 export const SettingsView: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(state => state.app.theme);
-  const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const reduxForecastingSettings = useAppSelector(selectForecastingSettings);
   const reduxCreditSettings = useAppSelector(selectCreditSettings);
+  const activeWallpaper = useAppSelector(selectActiveWallpaper);
   
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   
@@ -271,14 +270,13 @@ export const SettingsView: React.FC = () => {
                         </div>
                         <ThemeSwitcher theme={theme} setTheme={handleSetTheme} />
                     </div>
+                    {theme === 'material-you' && <MaterialYouSettings />}
                     {theme === 'glassmorphism' && (
                         <WallpaperGallery 
-                            activeWallpaper={activeWallpaper}
-                            onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))}
+                            activeWallpaper={activeWallpaper} 
+                            onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))} 
                         />
                     )}
-                    {theme === 'material-you' && <MaterialYouSettings />}
-                    {theme === 'adaptive-aura' && <AuraConfigurationPanel />}
                     <BrandingSettings />
                     <ForecastingSettings settings={localForecastingSettings} onSettingChange={handleForecastingChange} />
                     <CreditManagementSettings settings={localCreditSettings} onSettingChange={handleCreditChange} />

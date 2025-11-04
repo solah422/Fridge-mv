@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectActiveWallpaper, selectMaterialYouSeedColor, selectAuraConfig } from './store/slices/appSlice';
+import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectMaterialYouSeedColor, selectActiveWallpaper } from './store/slices/appSlice';
 import { fetchCustomers, updateCustomers } from './store/slices/customersSlice';
 import { fetchProducts, updateProducts } from './store/slices/productsSlice';
 import { fetchTransactions, saveTransaction } from './store/slices/transactionsSlice';
@@ -21,7 +21,6 @@ import { logout, selectUser } from './store/slices/authSlice';
 import { addNotification } from './store/slices/notificationsSlice';
 import { storageService } from './services/storageService';
 import { generateMaterialYouPalette } from './utils/materialYouTheme';
-import { generateAuraVariables } from './utils/auraTheme';
 
 import { POSView } from './components/POSView';
 import { InvoicesView } from './components/InvoicesView';
@@ -41,7 +40,7 @@ const APP_VERSION = '12.0.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
-export type Theme = 'light' | 'dark' | 'redbox' | 'amoled' | 'glassmorphism' | 'material-you' | 'adaptive-aura';
+export type Theme = 'light' | 'dark' | 'redbox' | 'amoled' | 'material-you' | 'glassmorphism';
 
 const AdminLayout: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -188,9 +187,8 @@ const AdminLayout: React.FC = () => {
 const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(state => state.app.theme);
-  const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const materialYouSeedColor = useAppSelector(selectMaterialYouSeedColor);
-  const auraConfig = useAppSelector(selectAuraConfig);
+  const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const user = useAppSelector(selectUser);
   const transactions = useAppSelector(state => state.transactions.items);
   const customers = useAppSelector(state => state.customers.items);
@@ -401,13 +399,21 @@ const App: React.FC = () => {
   useEffect(() => {
     const root = document.documentElement;
     const appContainer = appContainerRef.current;
+    if (!appContainer) return;
 
-    // Cleanup all theme classes
-    root.classList.remove('dark', 'theme-redbox', 'theme-amoled', 'theme-glassmorphism', 'theme-material-you', 'theme-adaptive-aura');
-    if (appContainer) {
-      appContainer.classList.remove('theme-glassmorphism-bg-dynamic');
+    // Handle wallpaper for Glassmorphism theme
+    if (theme === 'glassmorphism') {
+      const defaultWallpaper = 'https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2550&auto=format&fit=crop';
+      appContainer.style.backgroundImage = `url(${activeWallpaper || defaultWallpaper})`;
+      appContainer.style.backgroundSize = 'cover';
+      appContainer.style.backgroundPosition = 'center';
+      appContainer.style.backgroundAttachment = 'fixed';
+    } else {
       appContainer.style.backgroundImage = '';
     }
+
+    // Cleanup all theme classes
+    root.classList.remove('dark', 'theme-redbox', 'theme-amoled', 'theme-material-you', 'theme-glassmorphism');
 
     // Apply new theme class
     if (theme === 'dark') {
@@ -416,41 +422,23 @@ const App: React.FC = () => {
       root.classList.add('dark', 'theme-redbox');
     } else if (theme === 'amoled') {
       root.classList.add('dark', 'theme-amoled');
-    } else if (theme === 'glassmorphism') {
-      root.classList.add('dark', 'theme-glassmorphism');
-      if (appContainer) {
-        const defaultWallpaper = 'https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2550&auto=format&fit=crop';
-        appContainer.style.backgroundImage = `url('${activeWallpaper || defaultWallpaper}')`;
-        appContainer.classList.add('theme-glassmorphism-bg-dynamic');
-      }
     } else if (theme === 'material-you') {
         root.classList.add('dark', 'theme-material-you');
-    } else if (theme === 'adaptive-aura') {
-        root.classList.add('dark', 'theme-adaptive-aura');
+    } else if (theme === 'glassmorphism') {
+        root.classList.add('dark', 'theme-glassmorphism');
     }
   }, [theme, activeWallpaper]);
   
   // Material You Dynamic Color Updater
   useEffect(() => {
-    const root = document.documentElement;
     if (theme === 'material-you') {
         const palette = generateMaterialYouPalette(materialYouSeedColor);
+        const root = document.documentElement;
         for (const [key, value] of Object.entries(palette)) {
             root.style.setProperty(key, value);
         }
     }
   }, [theme, materialYouSeedColor]);
-
-  // Adaptive Aura Dynamic Style Updater
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'adaptive-aura') {
-        const variables = generateAuraVariables(auraConfig);
-        for (const [key, value] of Object.entries(variables)) {
-            root.style.setProperty(key, value);
-        }
-    }
-  }, [theme, auraConfig]);
 
   const renderContent = () => {
     if (!user) {

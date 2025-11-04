@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '..';
 import { Theme } from '../../App';
 import { storageService } from '../../services/storageService'; // Simple sync storage for theme
-import { AuraConfig, auraPresets } from '../../utils/auraTheme';
 
 // FIX: Added 'requests' to the View type to match its usage in App.tsx and fix type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
@@ -25,9 +24,8 @@ interface AppState {
   creditSettings: CreditSettings;
   companyLogo: string | null;
   showWelcomePanel: boolean;
-  activeWallpaper: string | null;
   materialYouSeedColor: string;
-  auraConfig: AuraConfig;
+  activeWallpaper: string | null;
 }
 
 // Keep theme in localStorage for persistence across sessions, as it's a UI preference
@@ -41,9 +39,8 @@ const savedCreditSettings = storageService.getItem<CreditSettings>('creditSettin
   creditLimitIncreaseCap: 5000,
 });
 const savedLogo = storageService.getItem<string | null>('companyLogo', null);
-const savedWallpaper = storageService.getItem<string | null>('activeWallpaper', null);
 const savedMaterialYouSeedColor = storageService.getItem<string>('materialYouSeedColor', '#6750A4');
-const savedAuraConfig = storageService.getItem<AuraConfig>('auraConfig', auraPresets['Default Aura']);
+const savedActiveWallpaper = storageService.getItem<string | null>('activeWallpaper', null);
 
 
 const initialState: AppState = {
@@ -54,9 +51,8 @@ const initialState: AppState = {
   creditSettings: savedCreditSettings,
   companyLogo: savedLogo,
   showWelcomePanel: false,
-  activeWallpaper: savedWallpaper,
   materialYouSeedColor: savedMaterialYouSeedColor,
-  auraConfig: savedAuraConfig,
+  activeWallpaper: savedActiveWallpaper,
 };
 
 const appSlice = createSlice({
@@ -88,30 +84,25 @@ const appSlice = createSlice({
     setShowWelcomePanel(state, action: PayloadAction<boolean>) {
       state.showWelcomePanel = action.payload;
     },
-    setActiveWallpaper(state, action: PayloadAction<string | null>) {
-      state.activeWallpaper = action.payload;
-      storageService.setItem('activeWallpaper', action.payload);
-    },
     setMaterialYouSeedColor(state, action: PayloadAction<string>) {
         state.materialYouSeedColor = action.payload;
         storageService.setItem('materialYouSeedColor', action.payload);
     },
-    setAuraConfig(state, action: PayloadAction<Partial<AuraConfig>>) {
-      state.auraConfig = { ...state.auraConfig, ...action.payload };
-      storageService.setItem('auraConfig', state.auraConfig);
+    setActiveWallpaper(state, action: PayloadAction<string | null>) {
+      state.activeWallpaper = action.payload;
+      storageService.setItem('activeWallpaper', action.payload);
     }
   },
 });
 
-export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo, setShowWelcomePanel, setActiveWallpaper, setMaterialYouSeedColor, setAuraConfig } = appSlice.actions;
+export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo, setShowWelcomePanel, setMaterialYouSeedColor, setActiveWallpaper } = appSlice.actions;
 
 export const selectActiveView = (state: RootState) => state.app.activeView;
 export const selectForecastingSettings = (state: RootState) => state.app.forecastingSettings;
 export const selectCreditSettings = (state: RootState) => state.app.creditSettings;
 export const selectCompanyLogo = (state: RootState) => state.app.companyLogo;
-export const selectActiveWallpaper = (state: RootState) => state.app.activeWallpaper;
 export const selectMaterialYouSeedColor = (state: RootState) => state.app.materialYouSeedColor;
-export const selectAuraConfig = (state: RootState) => state.app.auraConfig;
+export const selectActiveWallpaper = (state: RootState) => state.app.activeWallpaper;
 
 
 export default appSlice.reducer;

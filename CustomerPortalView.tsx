@@ -15,9 +15,8 @@ import ThemeSwitcher from './components/ThemeSwitcher';
 import { AboutPanel } from './components/AboutPanel';
 import { Theme } from './App';
 import { setTheme, selectActiveWallpaper, setActiveWallpaper } from './store/slices/appSlice';
-import { WallpaperGallery } from './components/WallpaperGallery';
 import { MaterialYouSettings } from './components/MaterialYouSettings';
-import { AuraConfigurationPanel } from './components/AuraConfigurationPanel';
+import { WallpaperGallery } from './components/WallpaperGallery';
 
 type CustomerPortalTab = 'dashboard' | 'order' | 'history' | 'loyalty' | 'profile';
 
@@ -392,14 +391,13 @@ const ProfileTab: React.FC = () => {
                     </div>
                     <ThemeSwitcher theme={theme} setTheme={handleSetTheme} />
                 </div>
-                 {theme === 'glassmorphism' && (
+                {theme === 'material-you' && <MaterialYouSettings />}
+                {theme === 'glassmorphism' && (
                     <WallpaperGallery 
-                        activeWallpaper={activeWallpaper}
-                        onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))}
+                        activeWallpaper={activeWallpaper} 
+                        onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))} 
                     />
                 )}
-                {theme === 'material-you' && <MaterialYouSettings />}
-                {theme === 'adaptive-aura' && <AuraConfigurationPanel />}
             </div>
             <AboutPanel version={APP_VERSION} />
         </div>

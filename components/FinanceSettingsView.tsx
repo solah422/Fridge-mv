@@ -5,9 +5,8 @@ import ThemeSwitcher from './ThemeSwitcher';
 import { AboutPanel } from './AboutPanel';
 import { setTheme, selectActiveWallpaper, setActiveWallpaper } from '../store/slices/appSlice';
 import { Theme } from '../App';
-import { WallpaperGallery } from './WallpaperGallery';
 import { MaterialYouSettings } from './MaterialYouSettings';
-import { AuraConfigurationPanel } from './AuraConfigurationPanel';
+import { WallpaperGallery } from './WallpaperGallery';
 
 const APP_VERSION = '12.0.0';
 
@@ -63,14 +62,13 @@ export const FinanceSettingsView: React.FC = () => {
                     </div>
                     <ThemeSwitcher theme={theme} setTheme={handleSetTheme} />
                 </div>
-                 {theme === 'glassmorphism' && (
+                {theme === 'material-you' && <MaterialYouSettings />}
+                {theme === 'glassmorphism' && (
                     <WallpaperGallery 
-                        activeWallpaper={activeWallpaper}
-                        onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))}
+                        activeWallpaper={activeWallpaper} 
+                        onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))} 
                     />
                 )}
-                {theme === 'material-you' && <MaterialYouSettings />}
-                {theme === 'adaptive-aura' && <AuraConfigurationPanel />}
             </section>
             
             <section>

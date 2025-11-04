@@ -1,13 +1,11 @@
 export const changelogData = [
     { version: '12.0.0', date: 'Current', changes: [
-        'Major Feature: Introduced "Adaptive Aura," a new, hyper-customizable UI theme and dynamic theming engine.',
-        'New "Aura Configuration" panel available in settings for all user roles when the theme is active.',
-        'Added Style Presets: Instantly apply pre-configured styles like "Minimalist," "Glassy," and "Pro" modes.',
-        'Full Dynamic Color Control: Select any seed color to generate a complete, harmonious color palette for the entire app.',
-        'Granular UI Control: Added sliders to globally control corner radius, background transparency, and background blur intensity.',
-        'Adjustable Spacing: Added "Compact," "Standard," and "Spacious" options to control UI density.',
-        'Animation Speed Control: Added a slider to adjust the speed of all UI transitions and animations.',
-        'All user configurations for the Aura theme are saved and persist across sessions.',
+        'Major Feature: Implemented a new "Glassmorphism" UI theme, providing a modern, semi-transparent aesthetic with a frosted-glass effect.',
+        'Applied frosted-glass effect to all major UI components including panels, cards, modals, buttons, and input fields.',
+        'New Feature: Added a dynamic Wallpaper Gallery, which appears in Settings when the Glass theme is active.',
+        'Users can now choose from a selection of 5 pre-selected wallpapers or upload their own custom background image.',
+        'User wallpaper selections are saved and persist across sessions for a personalized experience.',
+        'Enhanced readability and UI feedback with vibrant text colors, subtle borders, floating shadows, and animated hover states on interactive elements.',
     ]},
     { version: '11.8.0', date: 'Previous', changes: [
         'Major Feature: Implemented a new, highly customizable "Material You" UI theme, based on Google\'s dynamic color design system.',
