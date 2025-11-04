@@ -1,5 +1,14 @@
 export const changelogData = [
-    { version: '11.2.1', date: 'Current', changes: [
+    { version: '11.7.6', date: 'Current', changes: [
+        'Bug Fix: Replaced the broken URL for the "Beach" wallpaper in the Glassmorphism theme gallery with a new, working image.'
+    ]},
+    { version: '11.7.5', date: 'Previous', changes: [
+        'New Feature: Implemented a Wallpaper Gallery for the Glassmorphism theme, available to all user roles in their respective settings panels.',
+        'User wallpaper selections for the Glassmorphism theme are now saved and persist across login sessions.',
+        'Visual Refinement: Adjusted the opacity and blur effects of the Glassmorphism theme for improved text readability and performance.',
+        'Bug Fix: Corrected a z-index issue where the theme selector dropdown menu would appear behind other UI elements in the Customer and Finance portals.'
+    ]},
+    { version: '11.2.1', date: 'Previous', changes: [
         'Universal Settings Access: All user roles (Admin, Finance, Customer) can now access the Theme Switcher from their respective settings pages.',
         'Added an "About" section with version and license information, now available to all users.',
         'Consistent User Experience: Ensured a consistent settings layout and functionality across all user portals.'

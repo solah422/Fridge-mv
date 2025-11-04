@@ -14,7 +14,8 @@ import { updateCustomers } from './store/slices/customersSlice';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import { AboutPanel } from './components/AboutPanel';
 import { Theme } from './App';
-import { setTheme } from './store/slices/appSlice';
+import { setTheme, selectActiveWallpaper, setActiveWallpaper } from './store/slices/appSlice';
+import { WallpaperGallery } from './components/WallpaperGallery';
 
 type CustomerPortalTab = 'dashboard' | 'order' | 'history' | 'loyalty' | 'profile';
 
@@ -304,7 +305,8 @@ const ProfileTab: React.FC = () => {
     const customers = useAppSelector(state => state.customers.items);
     const customer = customers.find(c => c.id === user?.id);
     const theme = useAppSelector(state => state.app.theme);
-    const APP_VERSION = '11.2.1';
+    const activeWallpaper = useAppSelector(selectActiveWallpaper);
+    const APP_VERSION = '11.7.6';
 
     const [formState, setFormState] = useState({
         name: customer?.name || '',
@@ -388,6 +390,12 @@ const ProfileTab: React.FC = () => {
                     </div>
                     <ThemeSwitcher theme={theme} setTheme={handleSetTheme} />
                 </div>
+                 {theme === 'glassmorphism' && (
+                    <WallpaperGallery 
+                        activeWallpaper={activeWallpaper}
+                        onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))}
+                    />
+                )}
             </div>
             <AboutPanel version={APP_VERSION} />
         </div>

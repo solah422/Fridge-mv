@@ -106,31 +106,30 @@
 
         /* Core Glass values */
         --color-bg-base: 17 24 39; /* gray-900 - Fallback */
-        --color-bg-card: 255 255 255 / 0.1;
-        --color-bg-subtle: 255 255 255 / 0.05;
+        --color-bg-card: 255 255 255 / 0.15;
+        --color-bg-subtle: 255 255 255 / 0.08;
 
         --color-border: 255 255 255 / 0.2;
         --color-border-subtle: 255 255 255 / 0.1;
       }
       
-      .theme-glassmorphism-bg {
-        background-image: url('https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2550&auto=format&fit=crop');
+      .theme-glassmorphism-bg-dynamic {
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
       }
-      .theme-glassmorphism-bg.bg-\[rgb\(var\(--color-bg-base\)\)\] {
+      .theme-glassmorphism-bg-dynamic.bg-\[rgb\(var\(--color-bg-base\)\)\] {
         background-color: transparent;
       }
 
       /* Apply general glass effect */
       .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-card\)\)\],
       .theme-glassmorphism .bg-\[rgb\(var\(--color-bg-subtle\)\)\] {
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         border-width: 1px;
         border-color: rgba(var(--color-border));
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       }
       
       /* Make popups like dropdowns, modals stand out more */

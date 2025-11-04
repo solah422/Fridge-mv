@@ -24,6 +24,7 @@ interface AppState {
   creditSettings: CreditSettings;
   companyLogo: string | null;
   showWelcomePanel: boolean;
+  activeWallpaper: string | null;
 }
 
 // Keep theme in localStorage for persistence across sessions, as it's a UI preference
@@ -37,6 +38,7 @@ const savedCreditSettings = storageService.getItem<CreditSettings>('creditSettin
   creditLimitIncreaseCap: 5000,
 });
 const savedLogo = storageService.getItem<string | null>('companyLogo', null);
+const savedWallpaper = storageService.getItem<string | null>('activeWallpaper', null);
 
 
 const initialState: AppState = {
@@ -47,6 +49,7 @@ const initialState: AppState = {
   creditSettings: savedCreditSettings,
   companyLogo: savedLogo,
   showWelcomePanel: false,
+  activeWallpaper: savedWallpaper,
 };
 
 const appSlice = createSlice({
@@ -77,16 +80,21 @@ const appSlice = createSlice({
     },
     setShowWelcomePanel(state, action: PayloadAction<boolean>) {
       state.showWelcomePanel = action.payload;
+    },
+    setActiveWallpaper(state, action: PayloadAction<string | null>) {
+      state.activeWallpaper = action.payload;
+      storageService.setItem('activeWallpaper', action.payload);
     }
   },
 });
 
-export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo, setShowWelcomePanel } = appSlice.actions;
+export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo, setShowWelcomePanel, setActiveWallpaper } = appSlice.actions;
 
 export const selectActiveView = (state: RootState) => state.app.activeView;
 export const selectForecastingSettings = (state: RootState) => state.app.forecastingSettings;
 export const selectCreditSettings = (state: RootState) => state.app.creditSettings;
 export const selectCompanyLogo = (state: RootState) => state.app.companyLogo;
+export const selectActiveWallpaper = (state: RootState) => state.app.activeWallpaper;
 
 
 export default appSlice.reducer;

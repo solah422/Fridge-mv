@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { setTheme, setForecastingSettings, selectForecastingSettings, setCreditSettings, selectCreditSettings, setCompanyLogo, selectCompanyLogo, ForecastingSettings as TForecastingSettings, CreditSettings as TCreditSettings } from '../store/slices/appSlice';
+import { setTheme, setForecastingSettings, selectForecastingSettings, setCreditSettings, selectCreditSettings, setCompanyLogo, selectCompanyLogo, ForecastingSettings as TForecastingSettings, CreditSettings as TCreditSettings, selectActiveWallpaper, setActiveWallpaper } from '../store/slices/appSlice';
 import ThemeSwitcher from './ThemeSwitcher';
 import { Theme } from '../App';
 import { GiftCardView } from './GiftCardView';
@@ -8,8 +8,9 @@ import { PromotionsView } from './PromotionsView';
 import { updateAdminPassword } from '../store/slices/authSlice';
 import { addNotification } from '../store/slices/notificationsSlice';
 import { AboutPanel } from './AboutPanel';
+import { WallpaperGallery } from './WallpaperGallery';
 
-const APP_VERSION = '11.2.1';
+const APP_VERSION = '11.7.6';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'about';
 
@@ -187,6 +188,7 @@ const BrandingSettings: React.FC = () => {
 export const SettingsView: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(state => state.app.theme);
+  const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const reduxForecastingSettings = useAppSelector(selectForecastingSettings);
   const reduxCreditSettings = useAppSelector(selectCreditSettings);
   
@@ -267,6 +269,12 @@ export const SettingsView: React.FC = () => {
                         </div>
                         <ThemeSwitcher theme={theme} setTheme={handleSetTheme} />
                     </div>
+                    {theme === 'glassmorphism' && (
+                        <WallpaperGallery 
+                            activeWallpaper={activeWallpaper}
+                            onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))}
+                        />
+                    )}
                     <BrandingSettings />
                     <ForecastingSettings settings={localForecastingSettings} onSettingChange={handleForecastingChange} />
                     <CreditManagementSettings settings={localCreditSettings} onSettingChange={handleCreditChange} />

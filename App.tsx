@@ -1,8 +1,8 @@
 
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel } from './store/slices/appSlice';
+import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectActiveWallpaper } from './store/slices/appSlice';
 import { fetchCustomers, updateCustomers } from './store/slices/customersSlice';
 import { fetchProducts, updateProducts } from './store/slices/productsSlice';
 import { fetchTransactions, saveTransaction } from './store/slices/transactionsSlice';
@@ -37,7 +37,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '11.2.1';
+const APP_VERSION = '11.7.6';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
@@ -188,11 +188,13 @@ const AdminLayout: React.FC = () => {
 const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(state => state.app.theme);
+  const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const user = useAppSelector(selectUser);
   const transactions = useAppSelector(state => state.transactions.items);
   const customers = useAppSelector(state => state.customers.items);
   const monthlyStatements = useAppSelector(state => state.monthlyStatements.items);
   const showWelcomePanel = useAppSelector(state => state.app.showWelcomePanel);
+  const appContainerRef = useRef<HTMLDivElement>(null);
 
   // Show welcome panel on login
   useEffect(() => {
@@ -395,11 +397,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const root = document.documentElement;
-    const appContainer = document.querySelector('.min-h-screen');
+    const appContainer = appContainerRef.current;
 
     root.classList.remove('dark', 'theme-redbox', 'theme-amoled', 'theme-glassmorphism');
     if (appContainer) {
-      appContainer.classList.remove('theme-glassmorphism-bg');
+      appContainer.classList.remove('theme-glassmorphism-bg-dynamic');
+      appContainer.style.backgroundImage = '';
     }
 
     if (theme === 'dark') {
@@ -411,10 +414,12 @@ const App: React.FC = () => {
     } else if (theme === 'glassmorphism') {
       root.classList.add('dark', 'theme-glassmorphism');
       if (appContainer) {
-        appContainer.classList.add('theme-glassmorphism-bg');
+        const defaultWallpaper = 'https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2550&auto=format&fit=crop';
+        appContainer.style.backgroundImage = `url('${activeWallpaper || defaultWallpaper}')`;
+        appContainer.classList.add('theme-glassmorphism-bg-dynamic');
       }
     }
-  }, [theme]);
+  }, [theme, activeWallpaper]);
 
   const renderContent = () => {
     if (!user) {
@@ -433,7 +438,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="bg-[rgb(var(--color-bg-base))] min-h-screen font-sans text-[rgb(var(--color-text-base))]">
+    <div ref={appContainerRef} className="bg-[rgb(var(--color-bg-base))] min-h-screen font-sans text-[rgb(var(--color-text-base))]">
       <ToastContainer />
       {showWelcomePanel && <WelcomePanel version={APP_VERSION} onClose={() => dispatch(setShowWelcomePanel(false))} />}
       {renderContent()}
