@@ -147,17 +147,26 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, onClose, on
 
                 {/* Footer */}
                 <section className="mt-8 flex justify-between items-end">
-                    <div className="text-sm text-gray-600">
-                        <h5 className="font-bold text-gray-800 mb-2">Terms & Conditions/Notes:</h5>
-                        <p>All sales are final. Returns are subject to terms.</p>
-                        <p className="font-bold text-gray-800 mt-4">THANK YOU FOR YOUR BUSINESS</p>
-                        
-                        {invoice.paymentStatus === 'paid' && invoice.paymentMethod &&
+                    <div className="text-sm text-gray-600 max-w-md">
+                        {invoice.paymentStatus === 'unpaid' ? (
+                            <>
+                                <h5 className="font-bold text-gray-800 mb-2">Payment Instructions</h5>
+                                <p className="text-xs">Please settle the due amount to the following bank account:</p>
+                                <div className="font-mono text-xs mt-2 space-y-0.5 bg-gray-50 p-2 rounded border">
+                                    <p><strong>Account Name:</strong> Ahmed Afrah</p>
+                                    <p><strong>Account Number:</strong> MVR 7730000599889</p>
+                                    <p><strong>Bank Name:</strong> BANK OF MALDIVES PLC</p>
+                                </div>
+                                <p className="text-xs mt-2">Either Viber/Telegram: 9630080 the Receipt or Upload thru Customer Portal</p>
+                            </>
+                        ) : (
+                            invoice.paymentMethod &&
                             <div className="mt-6">
                                 <h5 className="font-bold text-cyan-600 mb-1">Payment Method</h5>
                                 <p className="capitalize">{invoice.paymentMethod.replace('_', ' ')}</p>
                             </div>
-                        }
+                        )}
+                        <p className="font-bold text-gray-800 mt-4">THANK YOU FOR YOUR BUSINESS</p>
                     </div>
 
                     <div className="w-full max-w-xs space-y-2 text-sm">

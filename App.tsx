@@ -22,6 +22,7 @@ import { logout, selectUser } from './store/slices/authSlice';
 import { addNotification } from './store/slices/notificationsSlice';
 import { storageService } from './services/storageService';
 import { generateMaterialYouPalette } from './utils/materialYouTheme';
+import { fetchCustomerGroups } from './store/slices/customerGroupsSlice';
 
 import { POSView } from './components/POSView';
 import { InvoicesView } from './components/InvoicesView';
@@ -37,7 +38,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '15.0.0';
+const APP_VERSION = '15.3.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
@@ -211,6 +212,7 @@ const App: React.FC = () => {
   // Initial data fetch
   useEffect(() => {
     dispatch(fetchCustomers());
+    dispatch(fetchCustomerGroups());
     dispatch(fetchProducts());
     dispatch(fetchTransactions());
     dispatch(fetchWholesalers());

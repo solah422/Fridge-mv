@@ -1,5 +1,13 @@
 export const changelogData = [
-    { version: '15.0.0', date: 'Current', changes: [
+    { version: '15.3.0', date: 'Current', changes: [
+        'Major Feature: Customer Grouping System for enhanced organization.',
+        'New Group Management: Admins can now Create, Read, Update, and Delete customer groups via a new modal in the Customers view.',
+        'New Customer Assignment: Admins can assign customers to groups through a dropdown in the customer edit modal.',
+        'New Group Column: The main customer list now includes a "Group" column for easy identification.',
+        'New Group Filtering: Added a dropdown to filter the customer list by specific groups.',
+        'Enhancement: Customer bulk import template and logic updated to include the `redboxId` field.',
+    ]},
+    { version: '15.0.0', date: 'Previous', changes: [
         'Major Feature: Complete visual and functional overhaul of the main application login page.',
         'New Visuals: Implemented a dynamic, animated gradient background inspired by oceanic colors for an "awe-inspiring" first impression.',
         'New UI: The login, account activation, and password reset functions are now consolidated into a single, central "Glassmorphism" panel.',

@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Customer, Transaction, LoyaltySettings } from '../types';
+import { Customer, Transaction, LoyaltySettings, CustomerGroup } from '../types';
 import { ManageCustomersModal } from './ManageCustomersModal';
 import { ImportCustomersModal } from './ImportCustomersModal';
 import { LoyaltySettingsView } from './LoyaltySettingsView';
-import { useAppDispatch } from '../store/hooks';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { addNotification } from '../store/slices/notificationsSlice';
 import { BulkNotificationModal } from './BulkNotificationModal';
+import { selectAllCustomerGroups } from '../store/slices/customerGroupsSlice';
+import { ManageGroupsModal } from './ManageGroupsModal';
 
 interface CustomersViewProps {
   customers: Customer[];
@@ -35,13 +37,18 @@ const TabButton: React.FC<{ label: string; active: boolean; onClick: () => void 
 
 export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCustomersUpdate, transactions, loyaltySettings, onLoyaltySettingsUpdate }) => {
   const dispatch = useAppDispatch();
+  const customerGroups = useAppSelector(selectAllCustomerGroups);
   const [activeTab, setActiveTab] = useState<'customers' | 'loyalty'>('customers');
   const [searchTerm, setSearchTerm] = useState('');
+  const [groupFilter, setGroupFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isGroupsModalOpen, setIsGroupsModalOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
   const [selectedCustomerIds, setSelectedCustomerIds] = useState<number[]>([]);
   const [isBulkNotificationModalOpen, setIsBulkNotificationModalOpen] = useState(false);
+
+  const groupMap = useMemo(() => new Map(customerGroups.map(g => [g.id, g.name])), [customerGroups]);
 
   const customerData = useMemo(() => {
     return customers.map(customer => {
@@ -63,14 +70,21 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
   const averageSpend = useMemo(() => customerData.length > 0 ? totalRevenue / customerData.length : 0, [customerData, totalRevenue]);
 
   const filteredCustomers = useMemo(() => {
-    if (!searchTerm) return customerData;
+    let customersToFilter = customerData;
+    
+    if (groupFilter !== 'all') {
+        customersToFilter = customersToFilter.filter(c => c.groupId === parseInt(groupFilter));
+    }
+
+    if (!searchTerm) return customersToFilter;
+
     const lowercasedFilter = searchTerm.toLowerCase();
-    return customerData.filter(customer =>
+    return customersToFilter.filter(customer =>
       customer.name.toLowerCase().includes(lowercasedFilter) ||
       (customer.email && customer.email.toLowerCase().includes(lowercasedFilter)) ||
       (customer.phone && customer.phone.includes(searchTerm))
     );
-  }, [customerData, searchTerm]);
+  }, [customerData, searchTerm, groupFilter]);
   
   const handleOpenAddModal = () => {
     setCustomerToEdit(null);
@@ -176,22 +190,31 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
                 </div>
 
                 <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
                         <div className="flex items-center gap-2">
                             <button onClick={() => setIsImportModalOpen(true)} className="px-4 py-2 bg-[rgb(var(--color-bg-subtle))] text-[rgb(var(--color-text-base))] rounded-md hover:bg-[rgb(var(--color-border-subtle))] transition text-sm font-semibold">
                                 Import
+                            </button>
+                             <button onClick={() => setIsGroupsModalOpen(true)} className="px-4 py-2 bg-[rgb(var(--color-bg-subtle))] text-[rgb(var(--color-text-base))] rounded-md hover:bg-[rgb(var(--color-border-subtle))] transition text-sm font-semibold">
+                                Manage Groups
                             </button>
                             <button onClick={handleOpenAddModal} className="px-4 py-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] rounded-md hover:bg-[rgb(var(--color-primary-hover))] transition text-sm font-semibold">
                                 Add New Customer
                             </button>
                         </div>
-                        <input 
-                            type="text"
-                            placeholder="Search customers..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full max-w-xs p-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]"
-                        />
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                            <select value={groupFilter} onChange={e => setGroupFilter(e.target.value)} className="w-full md:w-48 p-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]">
+                                <option value="all">All Groups</option>
+                                {customerGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                            </select>
+                            <input 
+                                type="text"
+                                placeholder="Search customers..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full md:w-64 p-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]"
+                            />
+                        </div>
                     </div>
                     
                     {selectedCustomerIds.length > 0 && (
@@ -222,6 +245,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
                                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
                                     </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Name</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Group</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Contact</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Total Spent</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Last Purchase</th>
@@ -238,6 +262,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
                                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
                                         </td>
                                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[rgb(var(--color-text-base))]">{customer.name}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.groupId ? groupMap.get(customer.groupId) : 'None'}</td>
                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.email || customer.phone || 'N/A'}</td>
                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">MVR {customer.totalSpent.toFixed(2)}</td>
                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.lastPurchase ? customer.lastPurchase.toLocaleDateString() : 'N/A'}</td>
@@ -266,11 +291,19 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
         onRemove={handleRemoveCustomer}
         customerToEdit={customerToEdit}
         customers={customers}
+        customerGroups={customerGroups}
     />
     <ImportCustomersModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleBulkImport}
+        customers={customers}
+    />
+     <ManageGroupsModal
+        isOpen={isGroupsModalOpen}
+        onClose={() => setIsGroupsModalOpen(false)}
+        groups={customerGroups}
+        customers={customers}
     />
     <BulkNotificationModal
         isOpen={isBulkNotificationModalOpen}

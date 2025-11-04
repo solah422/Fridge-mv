@@ -1,3 +1,8 @@
+export interface CustomerGroup {
+  id: number;
+  name: string;
+}
+
 export interface Customer {
   id: number;
   name: string;
@@ -15,6 +20,7 @@ export interface Customer {
   maximumCreditLimit?: number;
   creditBlocked?: boolean;
   notifications?: string[];
+  groupId?: number;
 }
 
 export interface Product {

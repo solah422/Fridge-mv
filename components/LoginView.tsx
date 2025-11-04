@@ -177,7 +177,7 @@ export const LoginView: React.FC = () => {
             </div>
             
             <div className="absolute bottom-4 text-xs text-white/50">
-                v15.0.0
+                v15.3.0
             </div>
         </div>
     );

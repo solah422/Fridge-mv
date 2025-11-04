@@ -17,6 +17,7 @@ import passwordResetReducer from './slices/passwordResetSlice';
 import notificationsReducer from './slices/notificationsSlice';
 import monthlyStatementsReducer from './slices/monthlyStatementsSlice';
 import chaosReducer from './slices/chaosSlice';
+import customerGroupsReducer from './slices/customerGroupsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -38,6 +39,7 @@ export const store = configureStore({
     notifications: notificationsReducer,
     monthlyStatements: monthlyStatementsReducer,
     chaos: chaosReducer,
+    customerGroups: customerGroupsReducer,
   },
 });
 

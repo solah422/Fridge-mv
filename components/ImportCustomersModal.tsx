@@ -7,9 +7,10 @@ interface ImportCustomersModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (customers: ParsedCustomer[]) => void;
+  customers: Customer[];
 }
 
-export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOpen, onClose, onImport }) => {
+export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOpen, onClose, onImport, customers }) => {
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<ParsedCustomer[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
@@ -23,8 +24,8 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOp
   }, [isOpen]);
 
   const handleDownloadSample = () => {
-    const headers = "name,email,phone,telegramId";
-    const sampleData = "John Doe,john.d@example.com,555-1234,@johndoe";
+    const headers = "name,email,phone,telegramId,redboxId";
+    const sampleData = "John Doe,john.d@example.com,555-1234,@johndoe,1001";
     const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + sampleData;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -58,6 +59,7 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOp
 
         const newCustomers: ParsedCustomer[] = [];
         const newErrors: string[] = [];
+        const existingRedboxIds = new Set(customers.map(c => c.redboxId).filter(Boolean));
 
         for (let i = 1; i < lines.length; i++) {
             const values = lines[i].split(',');
@@ -70,11 +72,25 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOp
             const email = rowData.email || '';
             const phone = rowData.phone || '';
             const telegramId = rowData.telegramId || '';
-
+            const redboxId = rowData.redboxId ? parseInt(rowData.redboxId, 10) : undefined;
+            
+            let rowIsValid = true;
             if (!name) { 
                 newErrors.push(`Row ${i + 1}: Name is required.`); 
-            } else {
-                newCustomers.push({ name, email, phone, telegramId });
+                rowIsValid = false;
+            }
+            if (redboxId) {
+                if(isNaN(redboxId)) {
+                    newErrors.push(`Row ${i + 1}: Redbox ID must be a number.`); 
+                    rowIsValid = false;
+                } else if (existingRedboxIds.has(redboxId)) {
+                    newErrors.push(`Row ${i + 1}: Redbox ID "${redboxId}" is already in use.`); 
+                    rowIsValid = false;
+                }
+            }
+
+            if (rowIsValid) {
+                newCustomers.push({ name, email, phone, telegramId, redboxId });
             }
         }
         setErrors(newErrors);
@@ -121,8 +137,8 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOp
             <ol className="list-decimal list-inside text-sm text-[rgb(var(--color-text-muted))] mt-2 space-y-1">
               <li>Download the sample CSV file.</li>
               <li>Fill the sheet with your customer data. The `name` column is required.</li>
-              <li>`email`, `phone`, and `telegramId` are optional.</li>
-              <li>Upload the completed CSV file below.</li>
+              <li>`email`, `phone`, `telegramId`, and `redboxId` are optional.</li>
+              <li>`redboxId` must be a unique number if provided.</li>
             </ol>
             <button onClick={handleDownloadSample} className="mt-3 text-sm font-semibold text-[rgb(var(--color-primary))] hover:underline">Download Sample Template</button>
           </div>
@@ -156,7 +172,7 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOp
                     <tr>
                       <th className="px-3 py-2 text-left font-medium text-[rgb(var(--color-text-muted))]">Name</th>
                       <th className="px-3 py-2 text-left font-medium text-[rgb(var(--color-text-muted))]">Email</th>
-                      <th className="px-3 py-2 text-left font-medium text-[rgb(var(--color-text-muted))]">Phone</th>
+                      <th className="px-3 py-2 text-left font-medium text-[rgb(var(--color-text-muted))]">Redbox ID</th>
                     </tr>
                   </thead>
                   <tbody className="bg-[rgb(var(--color-bg-card))] divide-y divide-[rgb(var(--color-border-subtle))]">
@@ -164,7 +180,7 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOp
                       <tr key={i}>
                         <td className="px-3 py-2 whitespace-nowrap text-[rgb(var(--color-text-base))]">{p.name}</td>
                         <td className="px-3 py-2 whitespace-nowrap text-[rgb(var(--color-text-muted))]">{p.email || 'N/A'}</td>
-                        <td className="px-3 py-2 whitespace-nowrap text-[rgb(var(--color-text-muted))]">{p.phone || 'N/A'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-[rgb(var(--color-text-muted))]">{p.redboxId || 'N/A'}</td>
                       </tr>
                     ))}
                   </tbody>

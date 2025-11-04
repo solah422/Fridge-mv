@@ -6,11 +6,15 @@ import { MonthlyStatementModal } from './MonthlyStatementModal';
 import { ManageCustomersModal } from './ManageCustomersModal';
 import { addNotification } from '../store/slices/notificationsSlice';
 import { updateCustomers } from '../store/slices/customersSlice';
+// FIX: Added import for selectAllCustomerGroups to fetch customer groups.
+import { selectAllCustomerGroups } from '../store/slices/customerGroupsSlice';
 
 export const FinanceDashboardView: React.FC = () => {
     const dispatch = useAppDispatch();
     const allStatements = useAppSelector(selectAllMonthlyStatements);
     const allCustomers = useAppSelector(state => state.customers.items);
+    // FIX: Fetched customer groups from the Redux store.
+    const customerGroups = useAppSelector(selectAllCustomerGroups);
 
     const [filter, setFilter] = useState<'all' | 'due' | 'paid'>('due');
     const [searchTerm, setSearchTerm] = useState('');
@@ -104,7 +108,7 @@ export const FinanceDashboardView: React.FC = () => {
                 </table>
             </div>
             {viewingStatement && <MonthlyStatementModal statement={viewingStatement} onClose={() => setViewingStatement(null)} />}
-            {editingCustomer && <ManageCustomersModal isOpen={true} customers={allCustomers} onSave={handleSaveCustomer} onRemove={() => {}} onClose={() => setEditingCustomer(null)} customerToEdit={editingCustomer} />}
+            {editingCustomer && <ManageCustomersModal isOpen={true} customers={allCustomers} customerGroups={customerGroups} onSave={handleSaveCustomer} onRemove={() => {}} onClose={() => setEditingCustomer(null)} customerToEdit={editingCustomer} />}
         </div>
     );
 };

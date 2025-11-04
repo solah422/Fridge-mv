@@ -1,4 +1,4 @@
-import { Customer, Product, Transaction, Wholesaler, PurchaseOrder, InventoryEvent, LoyaltySettings, GiftCard, DailyReport, Promotion, ProductRequest, ProductSuggestion, PasswordResetRequest, MonthlyStatement, ChaosSettings } from '../types';
+import { Customer, Product, Transaction, Wholesaler, PurchaseOrder, InventoryEvent, LoyaltySettings, GiftCard, DailyReport, Promotion, ProductRequest, ProductSuggestion, PasswordResetRequest, MonthlyStatement, ChaosSettings, CustomerGroup } from '../types';
 import { INITIAL_CUSTOMERS, INITIAL_PRODUCTS, INITIAL_WHOLESALERS } from '../constants';
 
 const SIMULATED_LATENCY = 200; // ms
@@ -172,6 +172,7 @@ export const api = {
     passwordResetRequests: createApiCall<PasswordResetRequest[]>('passwordResetRequests', []),
     monthlyStatements: createApiCall<MonthlyStatement[]>('monthlyStatements', []),
     chaosSettings: createApiCall<ChaosSettings>('chaosSettings', defaultChaosSettings),
+    customerGroups: createApiCall<CustomerGroup[]>('customerGroups', []),
 };
 
 // --- Offline Handling ---

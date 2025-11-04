@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Customer } from '../types';
+import { Customer, CustomerGroup } from '../types';
 import { useAppSelector } from '../store/hooks';
 import { selectCreditSettings } from '../store/slices/appSlice';
 
 interface ManageCustomersModalProps {
   isOpen: boolean;
   customers: Customer[];
+  customerGroups: CustomerGroup[];
   onSave: (customer: Customer | Omit<Customer, 'id'>) => void;
   onRemove: (id: number) => void;
   onClose: () => void;
@@ -19,12 +20,13 @@ const InputField: React.FC<any> = ({ label, ...props }) => (
     </div>
 );
 
-export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOpen, customers, onSave, onRemove, onClose, customerToEdit }) => {
+export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOpen, customers, customerGroups, onSave, onRemove, onClose, customerToEdit }) => {
     const isEditing = customerToEdit !== null;
     const { defaultCreditLimit } = useAppSelector(selectCreditSettings);
     const [form, setForm] = useState({
         name: '', email: '', phone: '', telegramId: '', redboxId: '',
-        address: '', notes: '', tags: '', password: '', maximumCreditLimit: defaultCreditLimit.toString()
+        address: '', notes: '', tags: '', password: '', maximumCreditLimit: defaultCreditLimit.toString(),
+        groupId: '',
     });
     const [error, setError] = useState('');
 
@@ -41,6 +43,7 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
             tags: customerToEdit?.tags?.join(', ') || '',
             password: '',
             maximumCreditLimit: customerToEdit?.maximumCreditLimit?.toString() || defaultCreditLimit.toString(),
+            groupId: customerToEdit?.groupId?.toString() || '',
         });
         setError('');
       }
@@ -48,7 +51,7 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
 
     if (!isOpen) return null;
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
@@ -84,6 +87,7 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
             tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
             redboxId: numericRedboxId,
             maximumCreditLimit: parseInt(form.maximumCreditLimit, 10) || defaultCreditLimit,
+            groupId: form.groupId ? parseInt(form.groupId, 10) : undefined,
             ...(form.password.trim() && { password: form.password.trim() }),
             ...(!isEditing && { loyaltyPoints: 0, createdAt: new Date().toISOString(), creditBlocked: false }),
             ...(isEditing && { loyaltyPoints: customerToEdit.loyaltyPoints, createdAt: customerToEdit.createdAt, creditBlocked: customerToEdit.creditBlocked })
@@ -124,6 +128,13 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
                         <h4 className="font-semibold text-[rgb(var(--color-text-muted))] mb-3">Additional Details</h4>
                         <div className="space-y-4">
                             <InputField label="Address" name="address" value={form.address} onChange={handleChange} />
+                            <div>
+                                <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">Customer Group</label>
+                                <select name="groupId" value={form.groupId} onChange={handleChange} className="w-full p-2 border border-[rgb(var(--color-border))] rounded bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]">
+                                    <option value="">None</option>
+                                    {customerGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                </select>
+                            </div>
                              <div>
                                 <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">Notes</label>
                                 <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} className="w-full p-2 border border-[rgb(var(--color-border))] rounded bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]"></textarea>

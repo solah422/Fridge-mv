@@ -15,7 +15,7 @@ import { DefaultThemeSettings } from './DefaultThemeSettings';
 import { selectUser } from '../store/slices/authSlice';
 
 
-const APP_VERSION = '15.0.0';
+const APP_VERSION = '15.3.0';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'chaos' | 'about';
 
