@@ -25,6 +25,7 @@ interface AppState {
   companyLogo: string | null;
   showWelcomePanel: boolean;
   activeWallpaper: string | null;
+  materialYouSeedColor: string;
 }
 
 // Keep theme in localStorage for persistence across sessions, as it's a UI preference
@@ -39,6 +40,7 @@ const savedCreditSettings = storageService.getItem<CreditSettings>('creditSettin
 });
 const savedLogo = storageService.getItem<string | null>('companyLogo', null);
 const savedWallpaper = storageService.getItem<string | null>('activeWallpaper', null);
+const savedMaterialYouSeedColor = storageService.getItem<string>('materialYouSeedColor', '#6750A4');
 
 
 const initialState: AppState = {
@@ -50,6 +52,7 @@ const initialState: AppState = {
   companyLogo: savedLogo,
   showWelcomePanel: false,
   activeWallpaper: savedWallpaper,
+  materialYouSeedColor: savedMaterialYouSeedColor,
 };
 
 const appSlice = createSlice({
@@ -84,17 +87,22 @@ const appSlice = createSlice({
     setActiveWallpaper(state, action: PayloadAction<string | null>) {
       state.activeWallpaper = action.payload;
       storageService.setItem('activeWallpaper', action.payload);
+    },
+    setMaterialYouSeedColor(state, action: PayloadAction<string>) {
+        state.materialYouSeedColor = action.payload;
+        storageService.setItem('materialYouSeedColor', action.payload);
     }
   },
 });
 
-export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo, setShowWelcomePanel, setActiveWallpaper } = appSlice.actions;
+export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo, setShowWelcomePanel, setActiveWallpaper, setMaterialYouSeedColor } = appSlice.actions;
 
 export const selectActiveView = (state: RootState) => state.app.activeView;
 export const selectForecastingSettings = (state: RootState) => state.app.forecastingSettings;
 export const selectCreditSettings = (state: RootState) => state.app.creditSettings;
 export const selectCompanyLogo = (state: RootState) => state.app.companyLogo;
 export const selectActiveWallpaper = (state: RootState) => state.app.activeWallpaper;
+export const selectMaterialYouSeedColor = (state: RootState) => state.app.materialYouSeedColor;
 
 
 export default appSlice.reducer;

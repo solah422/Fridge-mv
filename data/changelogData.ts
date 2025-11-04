@@ -1,5 +1,13 @@
 export const changelogData = [
-    { version: '11.7.6', date: 'Current', changes: [
+    { version: '11.8.0', date: 'Current', changes: [
+        'Major Feature: Implemented a new, highly customizable "Material You" UI theme, based on Google\'s dynamic color design system.',
+        'New Dynamic Color Engine: The app can now generate a full, harmonious color palette from a single user-selected "seed" color when the Material You theme is active.',
+        'Full Personalization: Added a "Theme Customization" panel to the settings for all user roles, featuring a color picker to choose any seed color.',
+        'Theme Persistence: The user\'s selected seed color is saved and persists across sessions for a consistent, personalized experience.',
+        'Aesthetic Update: The Material You theme features softer, rounded corners on cards, buttons, and other UI elements for a modern look.',
+        'Added the new "Material You" option to the theme switcher.',
+    ]},
+    { version: '11.7.6', date: 'Previous', changes: [
         'Bug Fix: Replaced the broken URL for the "Beach" wallpaper in the Glassmorphism theme gallery with a new, working image.'
     ]},
     { version: '11.7.5', date: 'Previous', changes: [

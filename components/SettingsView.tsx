@@ -9,8 +9,9 @@ import { updateAdminPassword } from '../store/slices/authSlice';
 import { addNotification } from '../store/slices/notificationsSlice';
 import { AboutPanel } from './AboutPanel';
 import { WallpaperGallery } from './WallpaperGallery';
+import { MaterialYouSettings } from './MaterialYouSettings';
 
-const APP_VERSION = '11.7.6';
+const APP_VERSION = '11.8.0';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'about';
 
@@ -275,6 +276,7 @@ export const SettingsView: React.FC = () => {
                             onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))}
                         />
                     )}
+                    {theme === 'material-you' && <MaterialYouSettings />}
                     <BrandingSettings />
                     <ForecastingSettings settings={localForecastingSettings} onSettingChange={handleForecastingChange} />
                     <CreditManagementSettings settings={localCreditSettings} onSettingChange={handleCreditChange} />

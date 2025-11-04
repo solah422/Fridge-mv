@@ -16,6 +16,7 @@ import { AboutPanel } from './components/AboutPanel';
 import { Theme } from './App';
 import { setTheme, selectActiveWallpaper, setActiveWallpaper } from './store/slices/appSlice';
 import { WallpaperGallery } from './components/WallpaperGallery';
+import { MaterialYouSettings } from './components/MaterialYouSettings';
 
 type CustomerPortalTab = 'dashboard' | 'order' | 'history' | 'loyalty' | 'profile';
 
@@ -306,7 +307,7 @@ const ProfileTab: React.FC = () => {
     const customer = customers.find(c => c.id === user?.id);
     const theme = useAppSelector(state => state.app.theme);
     const activeWallpaper = useAppSelector(selectActiveWallpaper);
-    const APP_VERSION = '11.7.6';
+    const APP_VERSION = '11.8.0';
 
     const [formState, setFormState] = useState({
         name: customer?.name || '',
@@ -396,6 +397,7 @@ const ProfileTab: React.FC = () => {
                         onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))}
                     />
                 )}
+                {theme === 'material-you' && <MaterialYouSettings />}
             </div>
             <AboutPanel version={APP_VERSION} />
         </div>

@@ -34,7 +34,7 @@
         --color-border-subtle: 229 231 235; /* gray-200 */
       }
 
-      .dark, .theme-redbox, .theme-amoled, .theme-glassmorphism {
+      .dark, .theme-redbox, .theme-amoled, .theme-glassmorphism, .theme-material-you {
         color-scheme: dark;
       }
 
@@ -163,6 +163,47 @@
        .theme-glassmorphism .border-b, .theme-glassmorphism .border-t {
           border-color: rgba(var(--color-border-subtle)) !important;
        }
+      
+      .theme-material-you {
+        /* Placeholder variables, will be dynamically replaced by JS */
+        --color-primary: 103 80 164;
+        --color-primary-hover: 120 100 180;
+        --color-text-on-primary: 255 255 255;
+        --color-primary-light: 79 55 139;
+        --color-primary-text-on-light: 230 225 240;
+        --color-text-base: 230 225 235;
+        --color-text-muted: 200 195 205;
+        --color-text-subtle: 150 145 155;
+        --color-bg-base: 28 27 31;
+        --color-bg-card: 38 37 42;
+        --color-bg-subtle: 58 57 64;
+        --color-border: 147 143 153;
+        --color-border-subtle: 74 72 79;
+        --color-primary-focus-ring: 180 160 220;
+      }
+
+      /* Material You structural styles */
+      .theme-material-you .rounded-lg, .theme-material-you .rounded-xl {
+        border-radius: 1rem; /* 16px */
+      }
+      .theme-material-you .rounded-md {
+        border-radius: 0.75rem; /* 12px */
+      }
+      .theme-material-you button.rounded-full {
+        border-radius: 9999px !important;
+      }
+      .theme-material-you button.bg-\[rgb\(var\(--color-primary\)\)\] {
+         border-radius: 9999px;
+      }
+      .theme-material-you input, .theme-material-you select, .theme-material-you textarea {
+        background-color: rgb(var(--color-bg-subtle));
+        border-radius: 0.25rem;
+      }
+      .theme-material-you input:focus, .theme-material-you select:focus, .theme-material-you textarea:focus {
+        border-color: rgb(var(--color-primary));
+        box-shadow: none;
+      }
+
 
       *,
       *::before,

@@ -6,8 +6,9 @@ import { AboutPanel } from './AboutPanel';
 import { setTheme, selectActiveWallpaper, setActiveWallpaper } from '../store/slices/appSlice';
 import { Theme } from '../App';
 import { WallpaperGallery } from './WallpaperGallery';
+import { MaterialYouSettings } from './MaterialYouSettings';
 
-const APP_VERSION = '11.7.6';
+const APP_VERSION = '11.8.0';
 
 export const FinanceSettingsView: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -67,6 +68,7 @@ export const FinanceSettingsView: React.FC = () => {
                         onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))}
                     />
                 )}
+                {theme === 'material-you' && <MaterialYouSettings />}
             </section>
             
             <section>

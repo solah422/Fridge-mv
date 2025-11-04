@@ -1,8 +1,9 @@
 
 
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectActiveWallpaper } from './store/slices/appSlice';
+import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectActiveWallpaper, selectMaterialYouSeedColor } from './store/slices/appSlice';
 import { fetchCustomers, updateCustomers } from './store/slices/customersSlice';
 import { fetchProducts, updateProducts } from './store/slices/productsSlice';
 import { fetchTransactions, saveTransaction } from './store/slices/transactionsSlice';
@@ -22,6 +23,7 @@ import { Product, Wholesaler, PurchaseOrder, InventoryEvent, Transaction, Custom
 import { logout, selectUser } from './store/slices/authSlice';
 import { addNotification } from './store/slices/notificationsSlice';
 import { storageService } from './services/storageService';
+import { generateMaterialYouPalette } from './utils/materialYouTheme';
 
 import { POSView } from './components/POSView';
 import { InvoicesView } from './components/InvoicesView';
@@ -37,11 +39,11 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '11.7.6';
+const APP_VERSION = '11.8.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
-export type Theme = 'light' | 'dark' | 'redbox' | 'amoled' | 'glassmorphism';
+export type Theme = 'light' | 'dark' | 'redbox' | 'amoled' | 'glassmorphism' | 'material-you';
 
 const AdminLayout: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -189,6 +191,7 @@ const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(state => state.app.theme);
   const activeWallpaper = useAppSelector(selectActiveWallpaper);
+  const materialYouSeedColor = useAppSelector(selectMaterialYouSeedColor);
   const user = useAppSelector(selectUser);
   const transactions = useAppSelector(state => state.transactions.items);
   const customers = useAppSelector(state => state.customers.items);
@@ -395,16 +398,19 @@ const App: React.FC = () => {
     };
   }, [dispatch]);
 
+  // Dynamic Theme Management
   useEffect(() => {
     const root = document.documentElement;
     const appContainer = appContainerRef.current;
 
-    root.classList.remove('dark', 'theme-redbox', 'theme-amoled', 'theme-glassmorphism');
+    // Cleanup all theme classes
+    root.classList.remove('dark', 'theme-redbox', 'theme-amoled', 'theme-glassmorphism', 'theme-material-you');
     if (appContainer) {
       appContainer.classList.remove('theme-glassmorphism-bg-dynamic');
       appContainer.style.backgroundImage = '';
     }
 
+    // Apply new theme class
     if (theme === 'dark') {
       root.classList.add('dark');
     } else if (theme === 'redbox') {
@@ -418,8 +424,21 @@ const App: React.FC = () => {
         appContainer.style.backgroundImage = `url('${activeWallpaper || defaultWallpaper}')`;
         appContainer.classList.add('theme-glassmorphism-bg-dynamic');
       }
+    } else if (theme === 'material-you') {
+        root.classList.add('dark', 'theme-material-you');
     }
   }, [theme, activeWallpaper]);
+  
+  // Material You Dynamic Color Updater
+  useEffect(() => {
+    if (theme === 'material-you') {
+        const palette = generateMaterialYouPalette(materialYouSeedColor);
+        const root = document.documentElement;
+        for (const [key, value] of Object.entries(palette)) {
+            root.style.setProperty(key, value);
+        }
+    }
+  }, [theme, materialYouSeedColor]);
 
   const renderContent = () => {
     if (!user) {
