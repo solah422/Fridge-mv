@@ -1,5 +1,10 @@
 export const changelogData = [
-    { version: '11.0.0', date: 'Current', changes: [
+    { version: '11.2.1', date: 'Current', changes: [
+        'Universal Settings Access: All user roles (Admin, Finance, Customer) can now access the Theme Switcher from their respective settings pages.',
+        'Added an "About" section with version and license information, now available to all users.',
+        'Consistent User Experience: Ensured a consistent settings layout and functionality across all user portals.'
+    ]},
+    { version: '11.0.0', date: 'Previous', changes: [
         'Major Feature: Implemented a new "Glassmorphism" UI theme, providing a modern, semi-transparent aesthetic.',
         'Applied frosted-glass effect to all major UI components including panels, cards, modals, and input fields.',
         'The theme utilizes a `backdrop-filter` for a blurred background effect, creating a sense of depth.',

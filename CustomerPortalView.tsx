@@ -11,6 +11,10 @@ import { CustomerLoyaltyView } from './components/CustomerLoyaltyView';
 import { selectAllMonthlyStatements } from './store/slices/monthlyStatementsSlice';
 import { MonthlyStatementModal } from './components/MonthlyStatementModal';
 import { updateCustomers } from './store/slices/customersSlice';
+import ThemeSwitcher from './components/ThemeSwitcher';
+import { AboutPanel } from './components/AboutPanel';
+import { Theme } from './App';
+import { setTheme } from './store/slices/appSlice';
 
 type CustomerPortalTab = 'dashboard' | 'order' | 'history' | 'loyalty' | 'profile';
 
@@ -299,6 +303,8 @@ const ProfileTab: React.FC = () => {
     const user = useAppSelector(selectUser);
     const customers = useAppSelector(state => state.customers.items);
     const customer = customers.find(c => c.id === user?.id);
+    const theme = useAppSelector(state => state.app.theme);
+    const APP_VERSION = '11.2.1';
 
     const [formState, setFormState] = useState({
         name: customer?.name || '',
@@ -313,6 +319,10 @@ const ProfileTab: React.FC = () => {
     });
 
     if (!customer) return null;
+
+    const handleSetTheme = (newTheme: Theme) => {
+        dispatch(setTheme(newTheme));
+    };
 
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormState({ ...formState, [e.target.name]: e.target.value });
@@ -369,6 +379,17 @@ const ProfileTab: React.FC = () => {
                     <div className="text-right"><button type="submit" className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md">Update Password</button></div>
                 </form>
             </div>
+             <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold mb-4">Appearance</h3>
+                 <div className="p-4 bg-[rgb(var(--color-bg-subtle))] rounded-lg flex items-center justify-between">
+                    <div>
+                        <p className="font-medium text-[rgb(var(--color-text-base))]">App Theme</p>
+                        <p className="text-sm text-[rgb(var(--color-text-muted))]">Change the look and feel of the application.</p>
+                    </div>
+                    <ThemeSwitcher theme={theme} setTheme={handleSetTheme} />
+                </div>
+            </div>
+            <AboutPanel version={APP_VERSION} />
         </div>
     );
 };

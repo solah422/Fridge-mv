@@ -3,13 +3,13 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setTheme, setForecastingSettings, selectForecastingSettings, setCreditSettings, selectCreditSettings, setCompanyLogo, selectCompanyLogo, ForecastingSettings as TForecastingSettings, CreditSettings as TCreditSettings } from '../store/slices/appSlice';
 import ThemeSwitcher from './ThemeSwitcher';
 import { Theme } from '../App';
-import { ChangelogModal } from './ChangelogModal';
 import { GiftCardView } from './GiftCardView';
 import { PromotionsView } from './PromotionsView';
 import { updateAdminPassword } from '../store/slices/authSlice';
 import { addNotification } from '../store/slices/notificationsSlice';
+import { AboutPanel } from './AboutPanel';
 
-const APP_VERSION = '11.0.0';
+const APP_VERSION = '11.2.1';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'about';
 
@@ -184,69 +184,12 @@ const BrandingSettings: React.FC = () => {
     );
 };
 
-
-const LicensePanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    const licenseText = `BSD 3-Clause License
-
-Copyright (c) 2025, Ahmed Solah
-All rights reserved.
-
-This software (the "POS System") was developed by Ahmed Solah and provided to
-Adam Zahuwaan for use in connection with his business operations. Redistribution
-and use in source and binary forms, with or without modification, are permitted
-subject to the following conditions:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions, and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions, and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-3. Neither the name of Ahmed Solah nor the names of any contributors or
-   recipients, including Adam Zahuwaan, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission from Ahmed Solah.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`;
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-            <div className="bg-[rgb(var(--color-bg-card))] rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-                <div className="p-4 border-b border-[rgb(var(--color-border-subtle))] flex justify-between items-center flex-shrink-0">
-                    <h3 className="text-xl font-bold">BSD 3-Clause License</h3>
-                    <button onClick={onClose} className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-base))] text-3xl leading-none">&times;</button>
-                </div>
-                <div className="p-6 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm text-[rgb(var(--color-text-muted))] font-sans">
-                        {licenseText}
-                    </pre>
-                </div>
-                <div className="p-4 bg-[rgb(var(--color-bg-subtle))] border-t border-[rgb(var(--color-border-subtle))] flex justify-end flex-shrink-0">
-                    <button onClick={onClose} className="px-4 py-2 bg-[rgb(var(--color-border-subtle))] text-[rgb(var(--color-text-base))] rounded-md hover:bg-[rgb(var(--color-border))] transition">Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 export const SettingsView: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(state => state.app.theme);
   const reduxForecastingSettings = useAppSelector(selectForecastingSettings);
   const reduxCreditSettings = useAppSelector(selectCreditSettings);
   
-  const [isChangelogOpen, setIsChangelogOpen] = useState(false);
-  const [isLicensePanelOpen, setIsLicensePanelOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   
   // Local state for settings forms
@@ -344,30 +287,7 @@ export const SettingsView: React.FC = () => {
             {activeTab === 'promotions' && <PromotionsView />}
 
             {activeTab === 'about' && (
-                <section>
-                    <h3 className="text-xl font-semibold text-[rgb(var(--color-text-base))] mb-3">About Fridge MV</h3>
-                    <div className="p-4 bg-[rgb(var(--color-bg-subtle))] rounded-lg space-y-3">
-                        <div className="flex items-center justify-between">
-                            <p className="font-medium text-[rgb(var(--color-text-base))]">Version</p>
-                            <p className="text-sm font-mono px-2 py-1 bg-[rgb(var(--color-border-subtle))] rounded">{APP_VERSION}</p>
-                        </div>
-                        <div className="flex items-center justify-between border-t border-[rgb(var(--color-border-subtle))] pt-3">
-                            <p className="font-medium text-[rgb(var(--color-text-base))]">Changelog</p>
-                            <button onClick={() => setIsChangelogOpen(true)} className="text-sm font-semibold text-[rgb(var(--color-primary))] hover:underline">View History</button>
-                        </div>
-                    </div>
-                    <div className="p-4 mt-4 bg-[rgb(var(--color-bg-subtle))] rounded-lg">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-medium text-[rgb(var(--color-text-base))]">License</p>
-                                <p className="text-sm text-[rgb(var(--color-text-muted))] mt-1">BSD 3-Clause License</p>
-                            </div>
-                            <button onClick={() => setIsLicensePanelOpen(true)} className="text-sm font-semibold text-[rgb(var(--color-primary))] hover:underline">
-                                View Full License
-                            </button>
-                        </div>
-                    </div>
-                </section>
+                <AboutPanel version={APP_VERSION} />
             )}
         </div>
         
@@ -375,9 +295,6 @@ export const SettingsView: React.FC = () => {
             <p>Copyright © 2025 Fridge MV. All rights reserved.</p>
         </footer>
       </div>
-
-      <ChangelogModal isOpen={isChangelogOpen} onClose={() => setIsChangelogOpen(false)} />
-      {isLicensePanelOpen && <LicensePanel onClose={() => setIsLicensePanelOpen(false)} />}
     </>
   );
 };
