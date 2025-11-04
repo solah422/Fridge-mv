@@ -9,7 +9,7 @@ import { PromotionsView } from './PromotionsView';
 import { updateAdminPassword } from '../store/slices/authSlice';
 import { addNotification } from '../store/slices/notificationsSlice';
 
-const APP_VERSION = '10.4.0';
+const APP_VERSION = '10.8.2';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'about';
 

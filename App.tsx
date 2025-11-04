@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel } from './store/slices/appSlice';
@@ -35,9 +36,9 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '10.4.0';
+const APP_VERSION = '10.8.2';
 
-// FIX: Added 'requests' to the View type to allow it as a valid view.
+// FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
 export type Theme = 'light' | 'dark' | 'redbox' | 'amoled';
 

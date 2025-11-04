@@ -1,5 +1,15 @@
 export const changelogData = [
-    { version: '10.4.0', date: 'Current', changes: [
+    { version: '10.8.2', date: 'Current', changes: [
+        'Major Bug Fix: Fixed a critical crash in the Reports view caused by an incorrect Chart.js library setup.',
+        'Major Feature: Complete redesign and overhaul of the Reports view into a comprehensive Sales Dashboard.',
+        'New: Added date range presets (Today, Last 7 Days, etc.) for quick filtering.',
+        'New: Added key performance indicators (KPIs) for new customers.',
+        'Enhanced: Combined Sales and Profit into a single dual-axis chart for better trend comparison.',
+        'New: Added a detailed, sortable "Product Performance" table showing units sold, revenue, and profit for each item.',
+        'New: Added a "Top Customers" panel to identify key buyers in the selected period.',
+        'UI/UX: Reorganized the layout for improved clarity and data visualization.',
+    ]},
+    { version: '10.4.0', date: 'Previous', changes: [
         'Major Feature: Relaunched the Customer Portal with enhanced functionality.',
         'Integrated all customer-facing features into a unified, tab-based portal including Dashboard, Place Order, Order History, Loyalty, and a new Profile section.',
         'New Profile Management: Customers can now view and edit their profile information (email, phone, address).',
