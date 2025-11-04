@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectMaterialYouSeedColor, selectActiveWallpaper } from './store/slices/appSlice';
+import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectMaterialYouSeedColor, selectActiveWallpaper, selectActiveTheme } from './store/slices/appSlice';
 import { fetchCustomers, updateCustomers } from './store/slices/customersSlice';
 import { fetchProducts, updateProducts } from './store/slices/productsSlice';
 import { fetchTransactions, saveTransaction } from './store/slices/transactionsSlice';
@@ -37,7 +37,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '14.1.0';
+const APP_VERSION = '14.3.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
@@ -187,7 +187,7 @@ const AdminLayout: React.FC = () => {
 
 const App: React.FC = () => {
   const dispatch = useAppDispatch();
-  const theme = useAppSelector(state => state.app.theme);
+  const theme = useAppSelector(selectActiveTheme);
   const materialYouSeedColor = useAppSelector(selectMaterialYouSeedColor);
   const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const user = useAppSelector(selectUser);
@@ -404,9 +404,8 @@ const App: React.FC = () => {
     if (!appContainer) return;
 
     // Handle wallpaper for Glassmorphism theme
-    if (theme === 'glassmorphism') {
-      const defaultWallpaper = 'https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2550&auto=format&fit=crop';
-      appContainer.style.backgroundImage = `url(${activeWallpaper || defaultWallpaper})`;
+    if (activeWallpaper) {
+      appContainer.style.backgroundImage = `url(${activeWallpaper})`;
       appContainer.style.backgroundSize = 'cover';
       appContainer.style.backgroundPosition = 'center';
       appContainer.style.backgroundAttachment = 'fixed';

@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { updateFinancePassword } from '../store/slices/authSlice';
 import ThemeSwitcher from './ThemeSwitcher';
 import { AboutPanel } from './AboutPanel';
-import { setTheme, selectActiveWallpaper, setActiveWallpaper } from '../store/slices/appSlice';
+import { setUserTheme, selectActiveWallpaper, setUserWallpaper, selectActiveTheme } from '../store/slices/appSlice';
 import { Theme } from '../App';
 import { MaterialYouSettings } from './MaterialYouSettings';
 import { WallpaperGallery } from './WallpaperGallery';
@@ -12,7 +12,7 @@ const APP_VERSION = '12.0.0';
 
 export const FinanceSettingsView: React.FC = () => {
     const dispatch = useAppDispatch();
-    const theme = useAppSelector(state => state.app.theme);
+    const theme = useAppSelector(selectActiveTheme);
     const activeWallpaper = useAppSelector(selectActiveWallpaper);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -20,7 +20,7 @@ export const FinanceSettingsView: React.FC = () => {
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     const handleSetTheme = (newTheme: Theme) => {
-        dispatch(setTheme(newTheme));
+        dispatch(setUserTheme(newTheme));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -66,7 +66,7 @@ export const FinanceSettingsView: React.FC = () => {
                 {theme === 'glassmorphism' && (
                     <WallpaperGallery 
                         activeWallpaper={activeWallpaper} 
-                        onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))} 
+                        onSelectWallpaper={(url) => dispatch(setUserWallpaper(url))} 
                     />
                 )}
             </section>

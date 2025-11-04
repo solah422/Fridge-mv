@@ -14,7 +14,7 @@ import { updateCustomers } from './store/slices/customersSlice';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import { AboutPanel } from './components/AboutPanel';
 import { Theme } from './App';
-import { setTheme, selectActiveWallpaper, setActiveWallpaper } from './store/slices/appSlice';
+import { setUserTheme, selectActiveWallpaper, setUserWallpaper, selectActiveTheme } from './store/slices/appSlice';
 import { MaterialYouSettings } from './components/MaterialYouSettings';
 import { WallpaperGallery } from './components/WallpaperGallery';
 import { CustomerGiftCardsPanel } from './components/CustomerGiftCardsPanel';
@@ -352,9 +352,9 @@ const ProfileTab: React.FC = () => {
     const user = useAppSelector(selectUser);
     const customers = useAppSelector(state => state.customers.items);
     const customer = customers.find(c => c.id === user?.id);
-    const theme = useAppSelector(state => state.app.theme);
+    const theme = useAppSelector(selectActiveTheme);
     const activeWallpaper = useAppSelector(selectActiveWallpaper);
-    const APP_VERSION = '14.1.0';
+    const APP_VERSION = '14.3.0';
 
     const [formState, setFormState] = useState({
         name: customer?.name || '',
@@ -371,7 +371,7 @@ const ProfileTab: React.FC = () => {
     if (!customer) return null;
 
     const handleSetTheme = (newTheme: Theme) => {
-        dispatch(setTheme(newTheme));
+        dispatch(setUserTheme(newTheme));
     };
 
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -442,7 +442,7 @@ const ProfileTab: React.FC = () => {
                 {theme === 'glassmorphism' && (
                     <WallpaperGallery 
                         activeWallpaper={activeWallpaper} 
-                        onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))} 
+                        onSelectWallpaper={(url) => dispatch(setUserWallpaper(url))} 
                     />
                 )}
             </div>

@@ -5,6 +5,7 @@ import { RootState } from '..';
 import { updateProducts } from './productsSlice';
 import { updateCustomers } from './customersSlice';
 import { addInventoryEvents } from './inventoryHistorySlice';
+import { saveGiftCards } from './giftCardSlice';
 
 interface TransactionsState {
   items: Transaction[];
@@ -88,10 +89,31 @@ export const saveTransaction = createAsyncThunk(
     dispatch(updateCustomers(updatedCustomers));
     dispatch(addInventoryEvents(saleEvents));
     
+    // Gift Card Consumption Logic
+    if (transaction.giftCardPayments && transaction.giftCardPayments.length > 0) {
+        const { items: allGiftCards } = state.giftCards;
+        let updatedGiftCards = [...allGiftCards];
+
+        for (const payment of transaction.giftCardPayments) {
+            const cardIndex = updatedGiftCards.findIndex(gc => gc.id === payment.cardId);
+            if (cardIndex > -1) {
+                const cardToUpdate = { ...updatedGiftCards[cardIndex] }; // Create a copy
+                const newBalance = cardToUpdate.currentBalance - payment.amount;
+                
+                cardToUpdate.currentBalance = newBalance;
+                cardToUpdate.isEnabled = newBalance > 0; // Deactivate if balance is 0 or less
+                
+                updatedGiftCards[cardIndex] = cardToUpdate;
+            }
+        }
+        await dispatch(saveGiftCards(updatedGiftCards));
+    }
+    
     // API call
     if (state.app.isOnline) {
-      const allTransactions = [...state.transactions.items, transaction];
-      await api.transactions.save(allTransactions);
+      // Re-get state after optimistic update to get the correct list to save
+      const latestState = getState() as RootState;
+      await api.transactions.save(latestState.transactions.items);
     } else {
       await saveTransactionOffline(transaction);
     }

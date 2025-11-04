@@ -95,7 +95,7 @@ export const LoginView: React.FC = () => {
                     </button>
                 </p>
                 <div className="absolute bottom-3 right-5 text-xs text-[rgb(var(--color-text-subtle))]">
-                    v14.1.0
+                    v14.3.0
                 </div>
             </div>
 

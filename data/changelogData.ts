@@ -1,5 +1,9 @@
 export const changelogData = [
-    { version: '14.1.0', date: 'Current', changes: [
+    { version: '14.3.0', date: 'Current', changes: [
+        'Critical Fix: Implemented full gift card consumption logic. Balances are now correctly debited upon use, and cards are automatically deactivated when their balance reaches zero, preventing reuse.',
+        'UI Update: The "My Gift Cards" panel and cart redemption modal now correctly hide used/empty gift cards from the customer\'s dashboard and cart selection.'
+    ]},
+    { version: '14.1.0', date: 'Previous', changes: [
         'Major Feature: Implemented an end-to-end Customer Gift Card Management System, including admin generation, a customer dashboard panel, and a new cart redemption flow.',
         'Visual Tweak: Displayed the app version number on the login screen for easier reference.',
     ]},

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { setTheme, setForecastingSettings, selectForecastingSettings, setCreditSettings, selectCreditSettings, setCompanyLogo, selectCompanyLogo, ForecastingSettings as TForecastingSettings, CreditSettings as TCreditSettings, selectActiveWallpaper, setActiveWallpaper } from '../store/slices/appSlice';
+import { setUserTheme, setForecastingSettings, selectForecastingSettings, setCreditSettings, selectCreditSettings, setCompanyLogo, selectCompanyLogo, ForecastingSettings as TForecastingSettings, CreditSettings as TCreditSettings, selectActiveWallpaper, setUserWallpaper, selectActiveTheme } from '../store/slices/appSlice';
 import ThemeSwitcher from './ThemeSwitcher';
 import { Theme } from '../App';
 import { GiftCardView } from './GiftCardView';
@@ -11,8 +11,11 @@ import { AboutPanel } from './AboutPanel';
 import { MaterialYouSettings } from './MaterialYouSettings';
 import { WallpaperGallery } from './WallpaperGallery';
 import { ChaosAndFunView } from './ChaosAndFunView';
+import { DefaultThemeSettings } from './DefaultThemeSettings';
+import { selectUser } from '../store/slices/authSlice';
 
-const APP_VERSION = '14.1.0';
+
+const APP_VERSION = '14.3.0';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'chaos' | 'about';
 
@@ -189,7 +192,8 @@ const BrandingSettings: React.FC = () => {
 
 export const SettingsView: React.FC = () => {
   const dispatch = useAppDispatch();
-  const theme = useAppSelector(state => state.app.theme);
+  const user = useAppSelector(selectUser);
+  const theme = useAppSelector(selectActiveTheme);
   const reduxForecastingSettings = useAppSelector(selectForecastingSettings);
   const reduxCreditSettings = useAppSelector(selectCreditSettings);
   const activeWallpaper = useAppSelector(selectActiveWallpaper);
@@ -236,7 +240,7 @@ export const SettingsView: React.FC = () => {
   };
 
   const handleSetTheme = (newTheme: Theme) => {
-    dispatch(setTheme(newTheme));
+    dispatch(setUserTheme(newTheme));
   };
 
   const TabButton: React.FC<{ tab: SettingsTab; label: string }> = ({ tab, label }) => (
@@ -267,8 +271,8 @@ export const SettingsView: React.FC = () => {
                     <h3 className="text-xl font-semibold text-[rgb(var(--color-text-base))] mb-3">General Settings</h3>
                     <div className="p-4 bg-[rgb(var(--color-bg-subtle))] rounded-lg flex items-center justify-between">
                         <div>
-                            <p className="font-medium text-[rgb(var(--color-text-base))]">App Theme</p>
-                            <p className="text-sm text-[rgb(var(--color-text-muted))]">Change the look and feel of the application.</p>
+                            <p className="font-medium text-[rgb(var(--color-text-base))]">Your App Theme</p>
+                            <p className="text-sm text-[rgb(var(--color-text-muted))]">Change your personal look and feel of the application.</p>
                         </div>
                         <ThemeSwitcher theme={theme} setTheme={handleSetTheme} />
                     </div>
@@ -276,9 +280,12 @@ export const SettingsView: React.FC = () => {
                     {theme === 'glassmorphism' && (
                         <WallpaperGallery 
                             activeWallpaper={activeWallpaper} 
-                            onSelectWallpaper={(url) => dispatch(setActiveWallpaper(url))} 
+                            onSelectWallpaper={(url) => dispatch(setUserWallpaper(url))} 
                         />
                     )}
+
+                    {user?.role === 'admin' && <DefaultThemeSettings />}
+
                     <BrandingSettings />
                     <ForecastingSettings settings={localForecastingSettings} onSettingChange={handleForecastingChange} />
                     <CreditManagementSettings settings={localCreditSettings} onSettingChange={handleCreditChange} />

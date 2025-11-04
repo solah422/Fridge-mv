@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { RootState } from '..';
 import { Theme } from '../../App';
 import { storageService } from '../../services/storageService'; // Simple sync storage for theme
@@ -18,18 +18,26 @@ export interface CreditSettings {
 
 interface AppState {
   activeView: View;
-  theme: Theme;
+  // NEW: Default settings controlled by admin
+  defaultTheme: Theme;
+  defaultWallpaper: string | null;
+  // NEW: User-specific preferences
+  userTheme: Theme | null;
+  userWallpaper: string | null;
   isOnline: boolean;
   forecastingSettings: ForecastingSettings;
   creditSettings: CreditSettings;
   companyLogo: string | null;
   showWelcomePanel: boolean;
   materialYouSeedColor: string;
-  activeWallpaper: string | null;
 }
 
 // Keep theme in localStorage for persistence across sessions, as it's a UI preference
-const savedTheme = storageService.getItem<Theme>('theme', 'dark');
+const savedDefaultTheme = storageService.getItem<Theme>('defaultTheme', 'dark');
+const savedDefaultWallpaper = storageService.getItem<string | null>('defaultWallpaper', null);
+const savedUserTheme = storageService.getItem<Theme | null>('userTheme', null);
+const savedUserWallpaper = storageService.getItem<string | null>('userWallpaper', null);
+
 const savedForecastingSettings = storageService.getItem<ForecastingSettings>('forecastingSettings', {
   lookbackDays: 30,
   reorderThresholdDays: 7,
@@ -40,19 +48,20 @@ const savedCreditSettings = storageService.getItem<CreditSettings>('creditSettin
 });
 const savedLogo = storageService.getItem<string | null>('companyLogo', null);
 const savedMaterialYouSeedColor = storageService.getItem<string>('materialYouSeedColor', '#6750A4');
-const savedActiveWallpaper = storageService.getItem<string | null>('activeWallpaper', null);
 
 
 const initialState: AppState = {
   activeView: 'dashboard',
-  theme: savedTheme,
+  defaultTheme: savedDefaultTheme,
+  defaultWallpaper: savedDefaultWallpaper,
+  userTheme: savedUserTheme,
+  userWallpaper: savedUserWallpaper,
   isOnline: navigator.onLine,
   forecastingSettings: savedForecastingSettings,
   creditSettings: savedCreditSettings,
   companyLogo: savedLogo,
   showWelcomePanel: false,
   materialYouSeedColor: savedMaterialYouSeedColor,
-  activeWallpaper: savedActiveWallpaper,
 };
 
 const appSlice = createSlice({
@@ -62,9 +71,19 @@ const appSlice = createSlice({
     setActiveView(state, action: PayloadAction<View>) {
       state.activeView = action.payload;
     },
-    setTheme(state, action: PayloadAction<Theme>) {
-      state.theme = action.payload;
-      storageService.setItem('theme', action.payload);
+    setUserTheme(state, action: PayloadAction<Theme>) {
+      state.userTheme = action.payload;
+      storageService.setItem('userTheme', action.payload);
+    },
+    setUserWallpaper(state, action: PayloadAction<string | null>) {
+      state.userWallpaper = action.payload;
+      storageService.setItem('userWallpaper', action.payload);
+    },
+    setDefaultThemeAndWallpaper(state, action: PayloadAction<{ theme: Theme, wallpaper: string | null }>) {
+        state.defaultTheme = action.payload.theme;
+        state.defaultWallpaper = action.payload.wallpaper;
+        storageService.setItem('defaultTheme', action.payload.theme);
+        storageService.setItem('defaultWallpaper', action.payload.wallpaper);
     },
     setOnlineStatus(state, action: PayloadAction<boolean>) {
         state.isOnline = action.payload;
@@ -88,21 +107,49 @@ const appSlice = createSlice({
         state.materialYouSeedColor = action.payload;
         storageService.setItem('materialYouSeedColor', action.payload);
     },
-    setActiveWallpaper(state, action: PayloadAction<string | null>) {
-      state.activeWallpaper = action.payload;
-      storageService.setItem('activeWallpaper', action.payload);
-    }
   },
 });
 
-export const { setActiveView, setTheme, setOnlineStatus, setForecastingSettings, setCreditSettings, setCompanyLogo, setShowWelcomePanel, setMaterialYouSeedColor, setActiveWallpaper } = appSlice.actions;
+export const { 
+    setActiveView, 
+    setUserTheme, 
+    setUserWallpaper, 
+    setDefaultThemeAndWallpaper,
+    setOnlineStatus, 
+    setForecastingSettings, 
+    setCreditSettings, 
+    setCompanyLogo, 
+    setShowWelcomePanel, 
+    setMaterialYouSeedColor
+} = appSlice.actions;
 
 export const selectActiveView = (state: RootState) => state.app.activeView;
 export const selectForecastingSettings = (state: RootState) => state.app.forecastingSettings;
 export const selectCreditSettings = (state: RootState) => state.app.creditSettings;
 export const selectCompanyLogo = (state: RootState) => state.app.companyLogo;
 export const selectMaterialYouSeedColor = (state: RootState) => state.app.materialYouSeedColor;
-export const selectActiveWallpaper = (state: RootState) => state.app.activeWallpaper;
+
+// New selectors for theme components
+export const selectDefaultTheme = (state: RootState) => state.app.defaultTheme;
+export const selectDefaultWallpaper = (state: RootState) => state.app.defaultWallpaper;
+export const selectUserTheme = (state: RootState) => state.app.userTheme;
+export const selectUserWallpaper = (state: RootState) => state.app.userWallpaper;
+
+// Memoized selectors for deriving the active theme and wallpaper
+export const selectActiveTheme = createSelector(
+    [selectUserTheme, selectDefaultTheme],
+    (userTheme, defaultTheme) => userTheme ?? defaultTheme
+);
+
+export const selectActiveWallpaper = createSelector(
+    [selectUserWallpaper, selectDefaultWallpaper, selectActiveTheme],
+    (userWallpaper, defaultWallpaper, activeTheme) => {
+        if (activeTheme !== 'glassmorphism') {
+            return null;
+        }
+        return userWallpaper ?? defaultWallpaper;
+    }
+);
 
 
 export default appSlice.reducer;

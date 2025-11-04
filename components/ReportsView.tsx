@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { DailyReport, Transaction, Product, Customer } from '../types';
@@ -6,6 +7,8 @@ import { addDailyReport, selectAllDailyReports } from '../store/slices/reportsSl
 import { CalendarDropdown } from './CalendarDropdown';
 import { ZReportModal } from './ZReportModal';
 import { addNotification } from '../store/slices/notificationsSlice';
+// FIX: Replaced direct access to 'state.app.theme' with the 'selectActiveTheme' selector to correctly retrieve the current theme and resolve the type error.
+import { selectActiveTheme } from '../store/slices/appSlice';
 
 // Rely on the global Chart and dateFns objects loaded from index.html
 declare global {
@@ -41,7 +44,7 @@ export const ReportsView: React.FC = () => {
     const products = useAppSelector(state => state.products.items);
     const customers = useAppSelector(state => state.customers.items);
     const dailyReports = useAppSelector(selectAllDailyReports);
-    const theme = useAppSelector(state => state.app.theme);
+    const theme = useAppSelector(selectActiveTheme);
     
     const [isZReportModalOpen, setIsZReportModalOpen] = useState(false);
     
