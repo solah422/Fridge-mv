@@ -1,5 +1,10 @@
 export const changelogData = [
-    { version: '13.0.0', date: 'Current', changes: [
+    { version: '14.0.0', date: 'Current', changes: [
+        'New Feature: Added the "Item Bounty Board" to the Chaos & Fun module. Users can now post and contribute to bounties for out-of-stock items.',
+        'New Feature: Added the "POS Mascot (Cat)" to the Chaos & Fun module. A shared digital pet whose mood is influenced by office purchases and financial health.',
+        'Both new features are fully configurable from the Admin Settings panel.',
+    ]},
+    { version: '13.0.0', date: 'Previous', changes: [
         'Major Feature: Implemented a new "Chaos & Fun" management module in the Admin Settings panel.',
         'New: Added the "Impulse Buy" (Flash Sale) feature to create random, time-sensitive discounts on items.',
         'New: Added the "Pantry Lottery" (Mystery Snack) feature, allowing users to buy a mystery item for a chance at a random reward.',

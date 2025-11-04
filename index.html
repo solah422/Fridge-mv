@@ -165,10 +165,14 @@
       }
       .theme-glassmorphism input,
       .theme-glassmorphism select,
-      .theme-glassmorphism textarea {
+      .theme-glassmorphism textarea,
+      .theme-glassmorphism button.border {
         background-color: rgba(255, 255, 255, 0.08) !important;
         border-color: rgba(255, 255, 255, 0.25) !important;
         color: rgb(var(--color-text-base)) !important;
+      }
+      .theme-glassmorphism button.border span {
+        color: rgb(var(--color-text-subtle)) !important;
       }
       .theme-glassmorphism input::placeholder {
         color: rgb(var(--color-text-subtle));
@@ -182,13 +186,23 @@
         --tw-ring-shadow: none !important;
       }
       .theme-glassmorphism button.bg-\[rgb\(var\(--color-primary\)\)\] {
-        background-color: rgba(var(--color-primary), 0.8) !important;
+        background-color: rgba(var(--color-primary), 0.9) !important;
         color: rgb(var(--color-text-on-primary)) !important;
         transition: background-color 0.4s ease, transform 0.3s ease !important;
       }
       .theme-glassmorphism button.bg-\[rgb\(var\(--color-primary\)\)\]:hover {
         background-color: rgba(var(--color-primary-hover), 1) !important;
         transform: translateY(-2px);
+      }
+      .theme-glassmorphism button.bg-\[rgb\(var\(--color-primary\)\)\]:disabled {
+        background-color: rgba(var(--color-primary), 0.4) !important;
+        opacity: 0.7 !important;
+      }
+      .theme-glassmorphism .absolute.shadow-lg {
+        background-color: rgba(40, 50, 65, 0.85) !important;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
       }
       .theme-glassmorphism ::-webkit-scrollbar { width: 8px; height: 8px; }
       .theme-glassmorphism ::-webkit-scrollbar-track { background: transparent; }

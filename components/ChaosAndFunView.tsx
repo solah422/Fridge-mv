@@ -3,8 +3,10 @@ import { ImpulseBuySettings } from './ImpulseBuySettings';
 import { PantryLotterySettings } from './PantryLotterySettings';
 import { DebtDerbySettings } from './DebtDerbySettings';
 import { AIPersonalitySwapSettings } from './AIPersonalitySwapSettings';
+import { ItemBountyBoardSettings } from './ItemBountyBoardSettings';
+import { POSMascotSettings } from './POSMascotSettings';
 
-type ChaosTab = 'impulse' | 'lottery' | 'derby' | 'ai';
+type ChaosTab = 'impulse' | 'lottery' | 'derby' | 'ai' | 'bounty' | 'mascot';
 
 const SubTabButton: React.FC<{
     label: string;
@@ -36,6 +38,8 @@ export const ChaosAndFunView: React.FC = () => {
                         <SubTabButton label="Pantry Lottery" isActive={activeTab === 'lottery'} onClick={() => setActiveTab('lottery')} />
                         <SubTabButton label="The Debt Derby" isActive={activeTab === 'derby'} onClick={() => setActiveTab('derby')} />
                         <SubTabButton label="AI Personality Swap" isActive={activeTab === 'ai'} onClick={() => setActiveTab('ai')} />
+                        <SubTabButton label="Item Bounty Board" isActive={activeTab === 'bounty'} onClick={() => setActiveTab('bounty')} />
+                        <SubTabButton label="POS Mascot" isActive={activeTab === 'mascot'} onClick={() => setActiveTab('mascot')} />
                     </nav>
                 </div>
 
@@ -44,6 +48,8 @@ export const ChaosAndFunView: React.FC = () => {
                     {activeTab === 'lottery' && <PantryLotterySettings />}
                     {activeTab === 'derby' && <DebtDerbySettings />}
                     {activeTab === 'ai' && <AIPersonalitySwapSettings />}
+                    {activeTab === 'bounty' && <ItemBountyBoardSettings />}
+                    {activeTab === 'mascot' && <POSMascotSettings />}
                 </div>
             </div>
         </section>

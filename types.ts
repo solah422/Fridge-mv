@@ -1,5 +1,3 @@
-
-
 export interface Customer {
   id: number;
   name: string;
@@ -256,9 +254,35 @@ export interface AIPersonalitySwapSettings {
   personalities: AIPersonality[];
 }
 
+export interface ItemBountyBoardSettings {
+  enabled: boolean;
+  boardName: string;
+  minBounty: number;
+  minContribution: number;
+  payoutRecipientId: string; // Can be 'admin', 'finance', or a customer ID
+  newBountyMessage: string;
+  contributionMessage: string;
+  claimedMessage: string;
+}
+
+export interface POSMascotSettings {
+  enabled: boolean;
+  mascotName: string;
+  happyItems: number[];
+  sadItems: number[];
+  moodThreshold: number;
+  enableFiscalMood: boolean;
+  happyMessage: string;
+  sadMessage: string;
+  anxiousMessage: string;
+  secureMessage: string;
+}
+
 export interface ChaosSettings {
     impulseBuy: ImpulseBuySettings;
     pantryLottery: PantryLotterySettings;
     debtDerby: DebtDerbySettings;
     aiPersonalitySwap: AIPersonalitySwapSettings;
+    itemBountyBoard: ItemBountyBoardSettings;
+    posMascot: POSMascotSettings;
 }

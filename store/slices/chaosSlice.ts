@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { ChaosSettings, ImpulseBuySettings, PantryLotterySettings, DebtDerbySettings, AIPersonalitySwapSettings, AIPersonality } from '../../types';
+import { ChaosSettings, ImpulseBuySettings, PantryLotterySettings, DebtDerbySettings, AIPersonalitySwapSettings, AIPersonality, ItemBountyBoardSettings, POSMascotSettings } from '../../types';
 import { api } from '../../services/apiService';
 import { RootState } from '..';
 
@@ -53,6 +53,16 @@ const chaosSlice = createSlice({
         state.settings.aiPersonalitySwap = { ...state.settings.aiPersonalitySwap, ...action.payload };
       }
     },
+    updateItemBountyBoardSettings(state, action: PayloadAction<Partial<ItemBountyBoardSettings>>) {
+      if (state.settings) {
+        state.settings.itemBountyBoard = { ...state.settings.itemBountyBoard, ...action.payload };
+      }
+    },
+    updatePOSMascotSettings(state, action: PayloadAction<Partial<POSMascotSettings>>) {
+        if (state.settings) {
+            state.settings.posMascot = { ...state.settings.posMascot, ...action.payload };
+        }
+    },
     addOrUpdateAIPersonality(state, action: PayloadAction<AIPersonality>) {
         if(state.settings) {
             const index = state.settings.aiPersonalitySwap.personalities.findIndex(p => p.id === action.payload.id);
@@ -92,6 +102,8 @@ export const {
     updatePantryLotterySettings,
     updateDebtDerbySettings,
     updateAIPersonalitySwapSettings,
+    updateItemBountyBoardSettings,
+    updatePOSMascotSettings,
     addOrUpdateAIPersonality,
     removeAIPersonality,
 } = chaosSlice.actions;

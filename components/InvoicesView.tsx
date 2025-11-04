@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Transaction, MonthlyStatement } from '../types';
+import { Transaction, MonthlyStatement, InventoryEvent, Customer } from '../types';
 import { InvoiceModal } from './InvoiceModal';
 import { CalendarDropdown } from './CalendarDropdown';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
@@ -56,14 +56,18 @@ const InvoicesList: React.FC = () => {
           
           let updatedProducts = [...products];
           let updatedCustomers = [...customers];
-          const newHistoryEvents: any[] = [];
+          const newHistoryEvents: InventoryEvent[] = [];
           let totalReturnValue = 0;
     
           returnedItems.forEach(returnedItem => {
               const productIndex = updatedProducts.findIndex(p => p.id === returnedItem.itemId);
               if (productIndex > -1) {
-                  updatedProducts[productIndex].stock += returnedItem.quantity;
+                  const product = updatedProducts[productIndex];
+                  // FIX: Create a new product object instead of mutating the existing one to avoid read-only errors.
+                  updatedProducts[productIndex] = { ...product, stock: product.stock + returnedItem.quantity };
+                  
                   newHistoryEvents.push({ id: `evt-return-${Date.now()}-${returnedItem.itemId}`, productId: returnedItem.itemId, type: 'return', quantityChange: returnedItem.quantity, date: new Date().toISOString(), relatedId: transactionId, notes: `Return from ${transactionToUpdate!.customer.name}` });
+                  
                   const originalItem = transactionToUpdate!.items.find(i => i.id === returnedItem.itemId);
                   if (originalItem) {
                     totalReturnValue += originalItem.price * returnedItem.quantity;
@@ -75,20 +79,37 @@ const InvoicesList: React.FC = () => {
               const pointsToDeduct = Math.floor(totalReturnValue * loyaltySettings.pointsPerMvr);
               const customerIndex = updatedCustomers.findIndex(c => c.id === transactionToUpdate!.customer.id);
               if (customerIndex > -1) {
-                  updatedCustomers[customerIndex].loyaltyPoints = Math.max(0, (updatedCustomers[customerIndex].loyaltyPoints || 0) - pointsToDeduct);
+                  const customer = updatedCustomers[customerIndex];
+                  // FIX: Create a new customer object instead of mutating the existing one to avoid read-only errors.
+                  updatedCustomers[customerIndex] = { 
+                      ...customer,
+                      loyaltyPoints: Math.max(0, (customer.loyaltyPoints || 0) - pointsToDeduct)
+                  };
               }
           }
     
           if (issueStoreCredit && totalReturnValue > 0) {
               const newCard = await dispatch(createGiftCard({ initialBalance: totalReturnValue, isEnabled: true, customerId: transactionToUpdate.customer.id })).unwrap();
               dispatch(addNotification({ type: 'success', message: `Store credit issued on new Gift Card: ${newCard.id}`}));
+              
+              // Add a notification to the customer's profile
+              const customerIndex = updatedCustomers.findIndex(c => c.id === transactionToUpdate!.customer.id);
+              if (customerIndex > -1) {
+                  const customer = updatedCustomers[customerIndex];
+                  const newNotification = `You have received MVR ${totalReturnValue.toFixed(2)} in store credit. Your Gift Card code is: ${newCard.id}`;
+                  const updatedNotifications = [...(customer.notifications || []), newNotification];
+                  updatedCustomers[customerIndex] = {
+                      ...customer,
+                      notifications: updatedNotifications
+                  };
+              }
           }
           
           const newSubtotal = transactionToUpdate.subtotal - totalReturnValue;
           let newDiscountAmount = transactionToUpdate.discountAmount;
           const newTotal = Math.max(0, newSubtotal - (newDiscountAmount || 0));
     
-          const updatedTransaction = {
+          const updatedTransaction: Transaction = {
               ...transactionToUpdate,
               returns: [...(transactionToUpdate.returns || []), { date: new Date().toISOString(), items: returnedItems }],
               subtotal: newSubtotal,

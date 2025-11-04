@@ -198,7 +198,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, onClose, on
           <div className="p-4 bg-[rgb(var(--color-bg-subtle))] border-t flex flex-wrap gap-2 justify-end items-center">
              <div className="mr-auto">
               <label htmlFor="orderStatus" className="text-sm font-medium mr-2">Order Status:</label>
-              <select id="orderStatus" value={invoice.orderStatus} onChange={e => handleOrderStatusChange(e.target.value as Transaction['orderStatus'])} className="p-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]">
+              <select id="orderStatus" value={invoice.orderStatus} onChange={e => handleOrderStatusChange(e.target.value as Transaction['orderStatus'])} className="p-2 border border-[rgb(var(--color-border))] rounded-md text-[rgb(var(--color-text-base))]">
                 <option value="Pending">Pending</option>
                 <option value="Out for Delivery">Out for Delivery</option>
                 <option value="Delivered">Delivered</option>
