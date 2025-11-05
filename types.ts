@@ -1,3 +1,12 @@
+export interface Credential {
+  id?: number;
+  username?: string | null;
+  redboxId?: number | null;
+  hashedPassword?: string | null;
+  oneTimeCode?: string | null;
+  role: 'admin' | 'finance' | 'customer';
+}
+
 export interface CustomerGroup {
   id: number;
   name: string;
@@ -11,7 +20,7 @@ export interface Customer {
   telegramId: string;
   loyaltyPoints?: number;
   loyaltyTierId?: string;
-  password?: string;
+  password?: string; // This is now deprecated and will be removed in a future update
   redboxId?: number;
   address?: string;
   notes?: string;
@@ -73,6 +82,7 @@ export interface GiftCardPayment {
 export interface Transaction {
   id: string;
   customer: Customer;
+  customerId: number; // For indexing
   items: CartItem[];
   subtotal: number;
   promotionCode?: string;

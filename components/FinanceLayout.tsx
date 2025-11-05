@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout } from '../store/slices/authSlice';
-import { api } from '../services/apiService';
+// FIX: Removed deprecated apiService import.
 import { MandatoryPasswordChangeModal } from './MandatoryPasswordChangeModal';
 import { FinanceDashboardView } from './FinanceDashboardView';
 import { FinanceReportsView } from './FinanceReportsView';
 import { FinanceSettingsView } from './FinanceSettingsView';
+// FIX: Imported db service to query app settings.
+import { db } from '../services/dbService';
 
 type FinanceView = 'dashboard' | 'reports' | 'settings';
 
@@ -15,9 +17,10 @@ export const FinanceLayout: React.FC = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     useEffect(() => {
+        // FIX: Replaced api.auth call with direct db query.
         const checkPasswordStatus = async () => {
-            const authData = await api.auth.fetch();
-            if (!authData.financePasswordChanged) {
+            const financePasswordChangedSetting = await db.appSettings.get('financePasswordChanged');
+            if (!financePasswordChangedSetting || !financePasswordChangedSetting.value) {
                 setShowPasswordModal(true);
             }
         };

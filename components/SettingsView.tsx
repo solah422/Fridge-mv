@@ -5,7 +5,7 @@ import ThemeSwitcher from './ThemeSwitcher';
 import { Theme } from '../App';
 import { GiftCardView } from './GiftCardView';
 import { PromotionsView } from './PromotionsView';
-import { updateAdminPassword } from '../store/slices/authSlice';
+import { updatePassword } from '../store/slices/authSlice';
 import { addNotification } from '../store/slices/notificationsSlice';
 import { AboutPanel } from './AboutPanel';
 import { MaterialYouSettings } from './MaterialYouSettings';
@@ -15,7 +15,7 @@ import { DefaultThemeSettings } from './DefaultThemeSettings';
 import { selectUser } from '../store/slices/authSlice';
 
 
-const APP_VERSION = '15.3.0';
+const APP_VERSION = '16.0.0';
 
 type SettingsTab = 'general' | 'gift_cards' | 'promotions' | 'chaos' | 'about';
 
@@ -110,7 +110,7 @@ const AdminSecuritySettings: React.FC = () => {
              setMessage({ type: 'error', text: 'All fields are required.' });
             return;
         }
-        dispatch(updateAdminPassword({ currentPassword, newPassword }))
+        dispatch(updatePassword({ currentPassword, newPassword }))
             .unwrap()
             .then(() => {
                 setMessage({ type: 'success', text: 'Password updated successfully!' });
@@ -119,7 +119,7 @@ const AdminSecuritySettings: React.FC = () => {
                 setConfirmPassword('');
             })
             .catch((error) => {
-                setMessage({ type: 'error', text: error.message });
+                setMessage({ type: 'error', text: error.message || error });
             });
     };
     

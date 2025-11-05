@@ -145,7 +145,7 @@ export const POSView: React.FC = () => {
 
       // 2. Check credit limit
       const customerOutstandingBalance = allTransactions
-        .filter(tx => tx.customer.id === selectedCustomer.id && tx.paymentStatus === 'unpaid')
+        .filter(tx => tx.customerId === selectedCustomer.id && tx.paymentStatus === 'unpaid')
         .reduce((sum, tx) => sum + tx.total, 0);
 
       if (customerOutstandingBalance + total > customerCreditLimit) {
@@ -158,6 +158,7 @@ export const POSView: React.FC = () => {
     const newTransaction: Transaction = {
       id: `INV-${Date.now()}`,
       customer: selectedCustomer,
+      customerId: selectedCustomer.id,
       items: cart,
       subtotal,
       promotionCode: appliedPromo?.code,

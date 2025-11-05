@@ -27,6 +27,7 @@ export const MandatoryPasswordChangeModal: React.FC<MandatoryPasswordChangeModal
         }
 
         setIsLoading(true);
+        // The old password is now 'test' by default for the first login
         dispatch(forceFinancePasswordUpdate({ currentPassword: 'test', newPassword }))
             .unwrap()
             .then(() => {

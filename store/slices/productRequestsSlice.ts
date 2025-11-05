@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { ProductRequest } from '../../types';
-import { api } from '../../services/apiService';
+import { db } from '../../services/dbService';
 import { RootState } from '..';
 
 interface ProductRequestsState {
@@ -14,26 +14,24 @@ const initialState: ProductRequestsState = {
 };
 
 export const fetchProductRequests = createAsyncThunk('productRequests/fetch', async () => {
-  return await api.productRequests.fetch();
+  return await db.productRequests.toArray();
 });
 
 export const updateProductRequests = createAsyncThunk('productRequests/update', async (requests: ProductRequest[]) => {
-    await api.productRequests.save(requests);
+    await db.productRequests.bulkPut(requests);
     return requests;
 });
 
 export const addProductRequest = createAsyncThunk(
     'productRequests/add',
-    async (requestData: Omit<ProductRequest, 'id' | 'createdAt' | 'status'>, { getState }) => {
-        const state = getState() as RootState;
+    async (requestData: Omit<ProductRequest, 'id' | 'createdAt' | 'status'>) => {
         const newRequest: ProductRequest = {
             ...requestData,
             id: `REQ-${Date.now()}`,
             createdAt: new Date().toISOString(),
             status: 'pending',
         };
-        const updatedRequests = [...state.productRequests.items, newRequest];
-        await api.productRequests.save(updatedRequests);
+        await db.productRequests.add(newRequest);
         return newRequest;
     }
 );

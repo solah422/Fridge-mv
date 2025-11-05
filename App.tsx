@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectMaterialYouSeedColor, selectActiveWallpaper, selectActiveTheme } from './store/slices/appSlice';
+import { selectActiveView, setActiveView, setOnlineStatus, setShowWelcomePanel, selectMaterialYouSeedColor, selectActiveWallpaper, selectActiveTheme, fetchAppSettings, selectAppStatus } from './store/slices/appSlice';
 import { fetchCustomers, updateCustomers } from './store/slices/customersSlice';
 import { fetchProducts, updateProducts } from './store/slices/productsSlice';
 import { fetchTransactions, saveTransaction } from './store/slices/transactionsSlice';
@@ -16,11 +16,10 @@ import { fetchProductSuggestions } from './store/slices/productSuggestionsSlice'
 import { fetchPasswordResetRequests } from './store/slices/passwordResetSlice';
 import { fetchMonthlyStatements, addMonthlyStatements, updateMonthlyStatement } from './store/slices/monthlyStatementsSlice';
 import { fetchChaosSettings } from './store/slices/chaosSlice';
-import { syncOfflineTransactions } from './services/apiService';
 import { Product, Wholesaler, PurchaseOrder, InventoryEvent, Transaction, Customer, LoyaltySettings, MonthlyStatement } from './types';
 import { logout, selectUser } from './store/slices/authSlice';
 import { addNotification } from './store/slices/notificationsSlice';
-import { storageService } from './services/storageService';
+import { db } from './services/dbService';
 import { generateMaterialYouPalette } from './utils/materialYouTheme';
 import { fetchCustomerGroups } from './store/slices/customerGroupsSlice';
 
@@ -38,7 +37,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '15.3.0';
+const APP_VERSION = '16.0.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
@@ -192,6 +191,7 @@ const App: React.FC = () => {
   const materialYouSeedColor = useAppSelector(selectMaterialYouSeedColor);
   const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const user = useAppSelector(selectUser);
+  const appStatus = useAppSelector(selectAppStatus);
   const transactions = useAppSelector(state => state.transactions.items);
   const customers = useAppSelector(state => state.customers.items);
   const monthlyStatements = useAppSelector(state => state.monthlyStatements.items);
@@ -211,6 +211,7 @@ const App: React.FC = () => {
 
   // Initial data fetch
   useEffect(() => {
+    dispatch(fetchAppSettings());
     dispatch(fetchCustomers());
     dispatch(fetchCustomerGroups());
     dispatch(fetchProducts());
@@ -233,7 +234,9 @@ const App: React.FC = () => {
   useEffect(() => {
     if (user?.role === 'admin' && transactions.length > 0 && customers.length > 0) {
         const runMonthlyInvoicing = async () => {
-            const lastRun = storageService.getItem<string>('lastInvoicingRun', '2023-01');
+            const lastRunSetting = await db.appSettings.get('lastInvoicingRun');
+            const lastRun = lastRunSetting ? lastRunSetting.value as string : '2023-01';
+            
             const [lastRunYear, lastRunMonth] = lastRun.split('-').map(Number);
             
             let currentDate = new Date(lastRunYear, lastRunMonth, 1);
@@ -269,10 +272,10 @@ const App: React.FC = () => {
 
                 const customerTxMap = new Map<number, Transaction[]>();
                 transactionsForMonth.forEach(tx => {
-                    if (!customerTxMap.has(tx.customer.id)) {
-                        customerTxMap.set(tx.customer.id, []);
+                    if (!customerTxMap.has(tx.customerId)) {
+                        customerTxMap.set(tx.customerId, []);
                     }
-                    customerTxMap.get(tx.customer.id)!.push(tx);
+                    customerTxMap.get(tx.customerId)!.push(tx);
                 });
 
                 customerTxMap.forEach((txs, customerId) => {
@@ -306,7 +309,7 @@ const App: React.FC = () => {
             }
             
             const lastProcessedMonth = monthsToProcess[monthsToProcess.length - 1];
-            storageService.setItem('lastInvoicingRun', `${lastProcessedMonth.getFullYear()}-${lastProcessedMonth.getMonth() + 1}`);
+            await db.appSettings.put({ key: 'lastInvoicingRun', value: `${lastProcessedMonth.getFullYear()}-${lastProcessedMonth.getMonth() + 1}` });
         };
         
         runMonthlyInvoicing();
@@ -318,7 +321,9 @@ const App: React.FC = () => {
     if (user?.role === 'admin' && monthlyStatements.length > 0 && customers.length > 0) {
       const runOverdueCheck = async () => {
         const todayStr = new Date().toISOString().split('T')[0];
-        const lastCheck = storageService.getItem<string>('lastOverdueCheck', '');
+        const lastCheckSetting = await db.appSettings.get('lastOverdueCheck');
+        const lastCheck = lastCheckSetting ? lastCheckSetting.value as string : '';
+
         if (todayStr === lastCheck) return; // Already ran today
         
         console.log("Running daily overdue check...");
@@ -370,26 +375,16 @@ const App: React.FC = () => {
             dispatch(addNotification({ type: 'error', message: `Accounts for ${names} are overdue and have been credit blocked.`, duration: 10000 }));
         }
 
-        storageService.setItem('lastOverdueCheck', todayStr);
+        await db.appSettings.put({ key: 'lastOverdueCheck', value: todayStr });
       };
 
       runOverdueCheck();
     }
   }, [user, monthlyStatements, customers, dispatch]);
 
-  // Online/Offline status handling and synchronization
+  // Online/Offline status handling
   useEffect(() => {
-    const updateStatus = async () => {
-      const online = navigator.onLine;
-      dispatch(setOnlineStatus(online));
-      if (online) {
-        const offlineTxs = await syncOfflineTransactions();
-        if (offlineTxs.length > 0) {
-          dispatch(addNotification({ type: 'success', message: `Synced ${offlineTxs.length} offline transactions.` }));
-          offlineTxs.forEach(tx => dispatch(saveTransaction({ transaction: tx, source: 'pos' })));
-        }
-      }
-    };
+    const updateStatus = () => dispatch(setOnlineStatus(navigator.onLine));
     window.addEventListener('online', updateStatus);
     window.addEventListener('offline', updateStatus);
     updateStatus(); // Initial check
@@ -444,6 +439,9 @@ const App: React.FC = () => {
   }, [theme, materialYouSeedColor]);
 
   const renderContent = () => {
+    if (appStatus !== 'succeeded') {
+        return <div className="flex justify-center items-center min-h-screen text-lg">Loading App Data...</div>
+    }
     if (!user) {
       return <LoginView />;
     }

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Wholesaler } from '../../types';
-import { api } from '../../services/apiService';
+import { db } from '../../services/dbService';
 
 interface WholesalersState {
   items: Wholesaler[];
@@ -13,11 +13,11 @@ const initialState: WholesalersState = {
 };
 
 export const fetchWholesalers = createAsyncThunk('wholesalers/fetch', async () => {
-  return await api.wholesalers.fetch();
+  return await db.wholesalers.toArray();
 });
 
 export const updateWholesalers = createAsyncThunk('wholesalers/update', async (wholesalers: Wholesaler[]) => {
-    await api.wholesalers.save(wholesalers);
+    await db.wholesalers.bulkPut(wholesalers);
     return wholesalers;
 });
 

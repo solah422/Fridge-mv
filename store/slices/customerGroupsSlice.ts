@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { CustomerGroup } from '../../types';
-import { api } from '../../services/apiService';
+import { db } from '../../services/dbService';
 import { RootState } from '..';
 
 interface CustomerGroupsState {
@@ -14,11 +14,11 @@ const initialState: CustomerGroupsState = {
 };
 
 export const fetchCustomerGroups = createAsyncThunk('customerGroups/fetch', async () => {
-  return await api.customerGroups.fetch();
+  return await db.customerGroups.toArray();
 });
 
 export const updateCustomerGroups = createAsyncThunk('customerGroups/update', async (groups: CustomerGroup[]) => {
-    await api.customerGroups.save(groups);
+    await db.customerGroups.bulkPut(groups);
     return groups;
 });
 

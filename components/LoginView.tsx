@@ -52,6 +52,10 @@ const LoginForm: React.FC<{ setView: (view: View) => void }> = ({ setView }) => 
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+    useEffect(() => {
+        dispatch(clearAuthError());
+    }, [dispatch]);
+
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -65,7 +69,7 @@ const LoginForm: React.FC<{ setView: (view: View) => void }> = ({ setView }) => 
         <form className="space-y-6" onSubmit={handleLogin}>
             <h2 className="text-3xl font-bold text-center text-white">Welcome</h2>
             <div className="space-y-4">
-                <InputField label="Redbox ID" id="username" name="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required placeholder="Customer ID or Username" />
+                <InputField label="Redbox ID or Username" id="username" name="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required placeholder="Customer ID or Username" />
                 <InputField label="Password" id="password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
             </div>
             {authError && <p className="text-sm text-center text-red-300">{authError}</p>}
@@ -78,9 +82,10 @@ const LoginForm: React.FC<{ setView: (view: View) => void }> = ({ setView }) => 
     );
 };
 
+// FIX: Updated ActivateForm to include one-time code field and logic.
 const ActivateForm: React.FC<{ setView: (view: View) => void }> = ({ setView }) => {
     const dispatch = useAppDispatch();
-    const [formState, setFormState] = useState({ redboxId: '', password: '', confirmPassword: '' });
+    const [formState, setFormState] = useState({ redboxId: '', oneTimeCode: '', password: '', confirmPassword: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -96,7 +101,11 @@ const ActivateForm: React.FC<{ setView: (view: View) => void }> = ({ setView }) 
             return;
         }
         setIsLoading(true);
-        dispatch(registerCustomer({ redboxId: formState.redboxId, password: formState.password }))
+        dispatch(registerCustomer({ 
+            redboxId: formState.redboxId, 
+            oneTimeCode: formState.oneTimeCode,
+            password: formState.password 
+        }))
             .unwrap()
             .catch((err) => { setError(err); })
             .finally(() => { setIsLoading(false); });
@@ -105,9 +114,10 @@ const ActivateForm: React.FC<{ setView: (view: View) => void }> = ({ setView }) 
     return (
         <form className="space-y-6" onSubmit={handleActivate}>
             <h2 className="text-3xl font-bold text-center text-white">Activate Account</h2>
-            <p className="text-sm text-center text-gray-300">Enter your assigned Redbox ID to link and activate your account.</p>
+            <p className="text-sm text-center text-gray-300">Enter your assigned Redbox ID and one-time code to activate your account.</p>
             <div className="space-y-4">
                 <InputField label="Redbox ID" name="redboxId" type="number" value={formState.redboxId} onChange={handleInputChange} required placeholder="Enter your ID" />
+                <InputField label="One-Time Activation Code" name="oneTimeCode" type="text" value={formState.oneTimeCode} onChange={handleInputChange} required placeholder="123-456" />
                 <InputField label="Create Password" name="password" type="password" value={formState.password} onChange={handleInputChange} required placeholder="••••••••" />
                 <InputField label="Confirm Password" name="confirmPassword" type="password" value={formState.confirmPassword} onChange={handleInputChange} required placeholder="••••••••" />
             </div>
@@ -122,18 +132,27 @@ const ForgotForm: React.FC<{ setView: (view: View) => void }> = ({ setView }) =>
     const dispatch = useAppDispatch();
     const [identifier, setIdentifier] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const authError = useAppSelector(selectAuthError);
+
+    useEffect(() => {
+        dispatch(clearAuthError());
+    }, [dispatch]);
 
     const handleRequestReset = (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        dispatch(requestPasswordReset(identifier)).unwrap().then(() => setView('forgotSuccess')).finally(() => setIsLoading(false));
+        dispatch(requestPasswordReset(identifier))
+            .unwrap()
+            .then(() => setView('forgotSuccess'))
+            .finally(() => setIsLoading(false));
     };
 
     return (
         <form className="space-y-6" onSubmit={handleRequestReset}>
             <h2 className="text-3xl font-bold text-center text-white">Password Reset</h2>
             <p className="text-sm text-center text-gray-300">Enter your Redbox ID. An alert will be sent to the administrator to approve your reset. Admins/Finance must contact an administrator directly.</p>
-            <InputField label="Redbox ID" name="identifier" type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} required placeholder="Enter your ID" />
+            <InputField label="Redbox ID or Email" name="identifier" type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} required placeholder="Enter your ID or Email" />
+            {authError && <p className="text-sm text-center text-red-300">{authError}</p>}
             <PrimaryButton type="submit" disabled={isLoading}>{isLoading ? 'Sending...' : 'Request Reset'}</PrimaryButton>
             <div className="text-center text-sm"><SecondaryLink onClick={() => setView('login')}>Back to Login</SecondaryLink></div>
         </form>
@@ -143,7 +162,7 @@ const ForgotForm: React.FC<{ setView: (view: View) => void }> = ({ setView }) =>
 const ForgotSuccess: React.FC<{ setView: (view: View) => void }> = ({ setView }) => (
     <div className="space-y-6 text-center">
         <h2 className="text-3xl font-bold text-white">Request Sent!</h2>
-        <p className="text-sm text-gray-300">An alert has been sent to the administrator. They will contact you shortly to confirm your password has been reset, allowing you to activate your account again.</p>
+        <p className="text-sm text-gray-300">If an account matches your details, a reset request has been sent to the administrator. They will contact you shortly to confirm your password has been reset.</p>
         <SecondaryLink onClick={() => setView('login')}>Back to Login</SecondaryLink>
     </div>
 );
@@ -177,7 +196,7 @@ export const LoginView: React.FC = () => {
             </div>
             
             <div className="absolute bottom-4 text-xs text-white/50">
-                v15.3.0
+                v16.0.0
             </div>
         </div>
     );

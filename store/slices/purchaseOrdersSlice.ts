@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { PurchaseOrder } from '../../types';
-import { api } from '../../services/apiService';
+import { db } from '../../services/dbService';
 
 interface PurchaseOrdersState {
   items: PurchaseOrder[];
@@ -13,11 +13,11 @@ const initialState: PurchaseOrdersState = {
 };
 
 export const fetchPurchaseOrders = createAsyncThunk('purchaseOrders/fetch', async () => {
-  return await api.purchaseOrders.fetch();
+  return await db.purchaseOrders.toArray();
 });
 
 export const updatePurchaseOrders = createAsyncThunk('purchaseOrders/update', async (orders: PurchaseOrder[]) => {
-    await api.purchaseOrders.save(orders);
+    await db.purchaseOrders.bulkPut(orders);
     return orders;
 });
 

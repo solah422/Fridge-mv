@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { DailyReport } from '../../types';
-import { api } from '../../services/apiService';
+import { db } from '../../services/dbService';
 import { RootState } from '..';
 
 interface ReportsState {
@@ -16,13 +16,11 @@ const initialState: ReportsState = {
 };
 
 export const fetchDailyReports = createAsyncThunk('reports/fetchDailyReports', async () => {
-  return await api.dailyReports.fetch();
+  return await db.dailyReports.toArray();
 });
 
-export const addDailyReport = createAsyncThunk('reports/addDailyReport', async (report: DailyReport, { getState }) => {
-    const state = getState() as RootState;
-    const updatedReports = [...state.reports.dailyReports, report];
-    await api.dailyReports.save(updatedReports);
+export const addDailyReport = createAsyncThunk('reports/addDailyReport', async (report: DailyReport) => {
+    await db.dailyReports.add(report);
     return report;
 });
 

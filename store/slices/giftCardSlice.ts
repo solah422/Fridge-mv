@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { GiftCard } from '../../types';
-import { api } from '../../services/apiService';
+import { db } from '../../services/dbService';
 import { RootState } from '..';
 
 interface GiftCardState {
@@ -16,18 +16,17 @@ const initialState: GiftCardState = {
 };
 
 export const fetchGiftCards = createAsyncThunk('giftCards/fetchGiftCards', async () => {
-  return await api.giftCards.fetch();
+  return await db.giftCards.toArray();
 });
 
 export const saveGiftCards = createAsyncThunk('giftCards/saveGiftCards', async (cards: GiftCard[]) => {
-    await api.giftCards.save(cards);
+    await db.giftCards.bulkPut(cards);
     return cards;
 });
 
 export const createGiftCard = createAsyncThunk(
     'giftCards/createGiftCard',
     async (cardData: { initialBalance: number; customerId: number; expiryDate?: string; }, { getState }) => {
-        const state = getState() as RootState;
         const newCard: GiftCard = {
             id: `GC-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
             createdAt: new Date().toISOString(),
@@ -37,8 +36,7 @@ export const createGiftCard = createAsyncThunk(
             customerId: cardData.customerId,
             expiryDate: cardData.expiryDate,
         };
-        const updatedCards = [...state.giftCards.items, newCard];
-        await api.giftCards.save(updatedCards);
+        await db.giftCards.add(newCard);
         return newCard;
     }
 );

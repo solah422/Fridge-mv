@@ -1,5 +1,22 @@
 export const changelogData = [
-    { version: '15.3.0', date: 'Current', changes: [
+    { version: '16.0.0', date: 'Current', changes: [
+        'Major Security Overhaul: Replaced the entire user account system with a new, secure, Dexie.js-based credential backend.',
+        'Password Hashing: All user passwords are now securely hashed using the browser\'s native `SubtleCrypto` API (SHA-256). Plain-text passwords are no longer stored.',
+        'New Database Schema: Introduced a dedicated `credentials` table to separate sensitive authentication data from general customer profiles.',
+        'Admin-Controlled Activation: Admins now create customer profiles and generate a secure, one-time activation code.',
+        'New Activation Flow: Customers use their assigned `Redbox ID` and one-time code to securely set their password and activate their account.',
+        'Secure Password Resets: The "Forgot Password" flow now requires admin approval. Admins generate a new one-time code for the user to securely regain access.',
+        'Data Migration: All previous customer account data has been wiped. Admin and Finance accounts were migrated to the new hashed system. All customers must be re-activated by an admin.',
+        'Enhanced Login: The login page now intelligently handles both numeric `Redbox IDs` for customers and alphanumeric usernames for Admin/Finance roles.',
+    ]},
+    { version: '15.5.0', date: 'Previous', changes: [
+        'Major Architectural Refactor: Migrated the entire application data storage from `localStorage` to a robust IndexedDB backend using Dexie.js.',
+        'Performance Boost: Eliminated "insane duration" hangs and errors by replacing synchronous, full-data reads with efficient, asynchronous database queries for individual records.',
+        'Scalability & Reliability: Created a formal database schema with separate tables for `customers`, `products`, `transactions`, `appSettings`, and all other data models, ensuring data integrity and scalability.',
+        'Codebase Modernization: Removed the legacy `apiService.ts` and `storageService.ts` and refactored all data access logic across the application to use the new centralized `dbService.ts`.',
+        'Offline First: The application is now inherently more robust for offline use, as all data operations are managed through the powerful IndexedDB API.',
+    ]},
+    { version: '15.3.0', date: 'Previous', changes: [
         'Major Feature: Customer Grouping System for enhanced organization.',
         'New Group Management: Admins can now Create, Read, Update, and Delete customer groups via a new modal in the Customers view.',
         'New Customer Assignment: Admins can assign customers to groups through a dropdown in the customer edit modal.',

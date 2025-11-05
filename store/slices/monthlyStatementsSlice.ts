@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { MonthlyStatement } from '../../types';
-import { api } from '../../services/apiService';
+import { db } from '../../services/dbService';
 import { RootState } from '..';
 
 interface MonthlyStatementsState {
@@ -14,29 +14,18 @@ const initialState: MonthlyStatementsState = {
 };
 
 export const fetchMonthlyStatements = createAsyncThunk('monthlyStatements/fetch', async () => {
-  return await api.monthlyStatements.fetch();
+  return await db.monthlyStatements.toArray();
 });
 
-export const addMonthlyStatements = createAsyncThunk('monthlyStatements/add', async (statements: MonthlyStatement[], { getState }) => {
-    const state = getState() as RootState;
-    const updatedStatements = [...state.monthlyStatements.items];
-    
-    // Avoid duplicates
-    statements.forEach(newStatement => {
-        if (!updatedStatements.some(existing => existing.id === newStatement.id)) {
-            updatedStatements.push(newStatement);
-        }
-    });
-
-    await api.monthlyStatements.save(updatedStatements);
-    return updatedStatements;
+export const addMonthlyStatements = createAsyncThunk('monthlyStatements/add', async (statements: MonthlyStatement[]) => {
+    await db.monthlyStatements.bulkAdd(statements);
+    // Return all statements from DB to ensure consistency
+    return await db.monthlyStatements.toArray();
 });
 
-export const updateMonthlyStatement = createAsyncThunk('monthlyStatements/update', async (statement: MonthlyStatement, { getState }) => {
-    const state = getState() as RootState;
-    const updatedItems = state.monthlyStatements.items.map(s => s.id === statement.id ? statement : s);
-    await api.monthlyStatements.save(updatedItems);
-    return updatedItems;
+export const updateMonthlyStatement = createAsyncThunk('monthlyStatements/update', async (statement: MonthlyStatement) => {
+    await db.monthlyStatements.put(statement);
+    return await db.monthlyStatements.toArray();
 });
 
 const monthlyStatementsSlice = createSlice({

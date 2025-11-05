@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setActiveView } from '../store/slices/appSlice';
-import { selectAllPasswordResetRequests, updatePasswordResetRequests } from '../store/slices/passwordResetSlice';
-import { updateCustomers } from '../store/slices/customersSlice';
+import { selectAllPasswordResetRequests, approvePasswordReset } from '../store/slices/passwordResetSlice';
 import { addNotification } from '../store/slices/notificationsSlice';
 import { selectForecastingSettings, ForecastingSettings } from '../store/slices/appSlice';
 import { Product, Transaction } from '../types';
@@ -80,7 +79,6 @@ export const DashboardView: React.FC = () => {
     const dispatch = useAppDispatch();
     const transactions = useAppSelector(state => state.transactions.items);
     const products = useAppSelector(state => state.products.items);
-    const customers = useAppSelector(state => state.customers.items);
     const passwordResetRequests = useAppSelector(selectAllPasswordResetRequests);
     const forecastingSettings = useAppSelector(selectForecastingSettings);
 
@@ -116,25 +114,10 @@ export const DashboardView: React.FC = () => {
 
     const pendingResets = passwordResetRequests.filter(r => r.status === 'pending');
 
-    const handleApproveReset = (requestId: string, customerId: number) => {
-        const customerToUpdate = customers.find(c => c.id === customerId);
-        if (!customerToUpdate) {
-            dispatch(addNotification({ type: 'error', message: 'Error: Customer not found.' }));
-            return;
-        }
-
-        const updatedCustomers = customers.map(c => 
-            c.id === customerId ? { ...c, password: '' } : c
-        );
-        dispatch(updateCustomers(updatedCustomers));
-        
-        // FIX: Cast 'completed' to its literal type to prevent type widening to 'string'.
-        const updatedRequests = passwordResetRequests.map(r => 
-            r.id === requestId ? { ...r, status: 'completed' as 'completed' } : r
-        );
-        dispatch(updatePasswordResetRequests(updatedRequests));
-
-        dispatch(addNotification({ type: 'success', message: `${customerToUpdate.name}'s password has been reset.` }));
+    const handleApproveReset = (requestId: string) => {
+        dispatch(approvePasswordReset(requestId)).unwrap().catch(err => {
+            dispatch(addNotification({ type: 'error', message: err.message || 'Failed to approve reset.' }));
+        });
     };
 
     return (
@@ -224,8 +207,8 @@ export const DashboardView: React.FC = () => {
                                         <tr key={req.id} className="border-b border-[rgb(var(--color-border-subtle))] last:border-0">
                                             <td className="py-3">{req.customerName} (ID: {req.redboxId})</td>
                                             <td className="py-3 text-right">
-                                                <button onClick={() => handleApproveReset(req.id, req.customerId)} className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-md hover:bg-green-200">
-                                                    Approve Reset
+                                                <button onClick={() => handleApproveReset(req.id)} className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-md hover:bg-green-200">
+                                                    Approve & Gen. Code
                                                 </button>
                                             </td>
                                         </tr>

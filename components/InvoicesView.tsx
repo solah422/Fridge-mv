@@ -77,7 +77,7 @@ const InvoicesList: React.FC = () => {
           
           if (loyaltySettings.enabled && loyaltySettings.pointsPerMvr > 0 && totalReturnValue > 0) {
               const pointsToDeduct = Math.floor(totalReturnValue * loyaltySettings.pointsPerMvr);
-              const customerIndex = updatedCustomers.findIndex(c => c.id === transactionToUpdate!.customer.id);
+              const customerIndex = updatedCustomers.findIndex(c => c.id === transactionToUpdate!.customerId);
               if (customerIndex > -1) {
                   const customer = updatedCustomers[customerIndex];
                   // FIX: Create a new customer object instead of mutating the existing one to avoid read-only errors.
@@ -90,11 +90,11 @@ const InvoicesList: React.FC = () => {
     
           if (issueStoreCredit && totalReturnValue > 0) {
               // FIX: Removed the 'isEnabled' property from the createGiftCard dispatch call as it is not part of the expected payload and is handled within the thunk, resolving the TypeScript error.
-              const newCard = await dispatch(createGiftCard({ initialBalance: totalReturnValue, customerId: transactionToUpdate.customer.id })).unwrap();
+              const newCard = await dispatch(createGiftCard({ initialBalance: totalReturnValue, customerId: transactionToUpdate.customerId })).unwrap();
               dispatch(addNotification({ type: 'success', message: `Store credit issued on new Gift Card: ${newCard.id}`}));
               
               // Add a notification to the customer's profile
-              const customerIndex = updatedCustomers.findIndex(c => c.id === transactionToUpdate!.customer.id);
+              const customerIndex = updatedCustomers.findIndex(c => c.id === transactionToUpdate!.customerId);
               if (customerIndex > -1) {
                   const customer = updatedCustomers[customerIndex];
                   const newNotification = `You have received MVR ${totalReturnValue.toFixed(2)} in store credit. Your Gift Card code is: ${newCard.id}`;

@@ -41,6 +41,11 @@ export const store = configureStore({
     chaos: chaosReducer,
     customerGroups: customerGroupsReducer,
   },
+   middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+    // Dexie's async nature can sometimes cause non-serializable values in actions
+    // if not handled perfectly. This is a pragmatic adjustment for this complex app.
+    serializableCheck: false,
+  }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

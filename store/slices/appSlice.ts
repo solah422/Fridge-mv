@@ -1,9 +1,8 @@
-import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createSelector, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '..';
 import { Theme } from '../../App';
-import { storageService } from '../../services/storageService'; // Simple sync storage for theme
+import { db, getAllAppSettings } from '../../services/dbService';
 
-// FIX: Added 'requests' to the View type to match its usage in App.tsx and fix type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
 
 export interface ForecastingSettings {
@@ -18,10 +17,8 @@ export interface CreditSettings {
 
 interface AppState {
   activeView: View;
-  // NEW: Default settings controlled by admin
   defaultTheme: Theme;
   defaultWallpaper: string | null;
-  // NEW: User-specific preferences
   userTheme: Theme | null;
   userWallpaper: string | null;
   isOnline: boolean;
@@ -30,39 +27,71 @@ interface AppState {
   companyLogo: string | null;
   showWelcomePanel: boolean;
   materialYouSeedColor: string;
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
 }
-
-// Keep theme in localStorage for persistence across sessions, as it's a UI preference
-const savedDefaultTheme = storageService.getItem<Theme>('defaultTheme', 'dark');
-const savedDefaultWallpaper = storageService.getItem<string | null>('defaultWallpaper', null);
-const savedUserTheme = storageService.getItem<Theme | null>('userTheme', null);
-const savedUserWallpaper = storageService.getItem<string | null>('userWallpaper', null);
-
-const savedForecastingSettings = storageService.getItem<ForecastingSettings>('forecastingSettings', {
-  lookbackDays: 30,
-  reorderThresholdDays: 7,
-});
-const savedCreditSettings = storageService.getItem<CreditSettings>('creditSettings', {
-  defaultCreditLimit: 500,
-  creditLimitIncreaseCap: 5000,
-});
-const savedLogo = storageService.getItem<string | null>('companyLogo', null);
-const savedMaterialYouSeedColor = storageService.getItem<string>('materialYouSeedColor', '#6750A4');
-
 
 const initialState: AppState = {
   activeView: 'dashboard',
-  defaultTheme: savedDefaultTheme,
-  defaultWallpaper: savedDefaultWallpaper,
-  userTheme: savedUserTheme,
-  userWallpaper: savedUserWallpaper,
+  defaultTheme: 'dark',
+  defaultWallpaper: null,
+  userTheme: null,
+  userWallpaper: null,
   isOnline: navigator.onLine,
-  forecastingSettings: savedForecastingSettings,
-  creditSettings: savedCreditSettings,
-  companyLogo: savedLogo,
+  forecastingSettings: { lookbackDays: 30, reorderThresholdDays: 7 },
+  creditSettings: { defaultCreditLimit: 500, creditLimitIncreaseCap: 5000 },
+  companyLogo: null,
   showWelcomePanel: false,
-  materialYouSeedColor: savedMaterialYouSeedColor,
+  materialYouSeedColor: '#6750A4',
+  status: 'idle',
 };
+
+// --- Async Thunks for Dexie interaction ---
+
+export const fetchAppSettings = createAsyncThunk('app/fetchAppSettings', async () => {
+    return await getAllAppSettings();
+});
+
+export const saveUserTheme = createAsyncThunk('app/saveUserTheme', async (theme: Theme) => {
+    await db.appSettings.put({ key: 'userTheme', value: theme });
+    return theme;
+});
+
+export const saveUserWallpaper = createAsyncThunk('app/saveUserWallpaper', async (wallpaper: string | null) => {
+    await db.appSettings.put({ key: 'userWallpaper', value: wallpaper });
+    return wallpaper;
+});
+
+export const saveDefaultThemeAndWallpaper = createAsyncThunk('app/saveDefaultThemeAndWallpaper', async (payload: { theme: Theme, wallpaper: string | null }) => {
+    await db.transaction('rw', db.appSettings, async () => {
+        await db.appSettings.put({ key: 'defaultTheme', value: payload.theme });
+        await db.appSettings.put({ key: 'defaultWallpaper', value: payload.wallpaper });
+    });
+    return payload;
+});
+
+export const saveForecastingSettings = createAsyncThunk('app/saveForecastingSettings', async (settings: Partial<ForecastingSettings>, {getState}) => {
+    const state = getState() as RootState;
+    const newSettings = { ...state.app.forecastingSettings, ...settings };
+    await db.appSettings.put({ key: 'forecastingSettings', value: newSettings });
+    return newSettings;
+});
+
+export const saveCreditSettings = createAsyncThunk('app/saveCreditSettings', async (settings: Partial<CreditSettings>, {getState}) => {
+    const state = getState() as RootState;
+    const newSettings = { ...state.app.creditSettings, ...settings };
+    await db.appSettings.put({ key: 'creditSettings', value: newSettings });
+    return newSettings;
+});
+
+export const saveCompanyLogo = createAsyncThunk('app/saveCompanyLogo', async (logo: string | null) => {
+    await db.appSettings.put({ key: 'companyLogo', value: logo });
+    return logo;
+});
+
+export const saveMaterialYouSeedColor = createAsyncThunk('app/saveMaterialYouSeedColor', async (color: string) => {
+    await db.appSettings.put({ key: 'materialYouSeedColor', value: color });
+    return color;
+});
 
 const appSlice = createSlice({
   name: 'app',
@@ -71,59 +100,77 @@ const appSlice = createSlice({
     setActiveView(state, action: PayloadAction<View>) {
       state.activeView = action.payload;
     },
-    setUserTheme(state, action: PayloadAction<Theme>) {
-      state.userTheme = action.payload;
-      storageService.setItem('userTheme', action.payload);
-    },
-    setUserWallpaper(state, action: PayloadAction<string | null>) {
-      state.userWallpaper = action.payload;
-      storageService.setItem('userWallpaper', action.payload);
-    },
-    setDefaultThemeAndWallpaper(state, action: PayloadAction<{ theme: Theme, wallpaper: string | null }>) {
-        state.defaultTheme = action.payload.theme;
-        state.defaultWallpaper = action.payload.wallpaper;
-        storageService.setItem('defaultTheme', action.payload.theme);
-        storageService.setItem('defaultWallpaper', action.payload.wallpaper);
-    },
     setOnlineStatus(state, action: PayloadAction<boolean>) {
         state.isOnline = action.payload;
-    },
-    setForecastingSettings(state, action: PayloadAction<Partial<ForecastingSettings>>) {
-      state.forecastingSettings = { ...state.forecastingSettings, ...action.payload };
-      storageService.setItem('forecastingSettings', state.forecastingSettings);
-    },
-    setCreditSettings(state, action: PayloadAction<Partial<CreditSettings>>) {
-      state.creditSettings = { ...state.creditSettings, ...action.payload };
-      storageService.setItem('creditSettings', state.creditSettings);
-    },
-    setCompanyLogo(state, action: PayloadAction<string | null>) {
-      state.companyLogo = action.payload;
-      storageService.setItem('companyLogo', action.payload);
     },
     setShowWelcomePanel(state, action: PayloadAction<boolean>) {
       state.showWelcomePanel = action.payload;
     },
-    setMaterialYouSeedColor(state, action: PayloadAction<string>) {
-        state.materialYouSeedColor = action.payload;
-        storageService.setItem('materialYouSeedColor', action.payload);
-    },
   },
+  extraReducers: (builder) => {
+    builder
+        .addCase(fetchAppSettings.pending, (state) => {
+            state.status = 'loading';
+        })
+        .addCase(fetchAppSettings.fulfilled, (state, action) => {
+            const settings = action.payload;
+            state.defaultTheme = settings.defaultTheme ?? initialState.defaultTheme;
+            state.userTheme = settings.userTheme ?? initialState.userTheme;
+            state.defaultWallpaper = settings.defaultWallpaper ?? initialState.defaultWallpaper;
+            state.userWallpaper = settings.userWallpaper ?? initialState.userWallpaper;
+            state.forecastingSettings = settings.forecastingSettings ?? initialState.forecastingSettings;
+            state.creditSettings = settings.creditSettings ?? initialState.creditSettings;
+            state.companyLogo = settings.companyLogo ?? initialState.companyLogo;
+            state.materialYouSeedColor = settings.materialYouSeedColor ?? initialState.materialYouSeedColor;
+            state.status = 'succeeded';
+        })
+        .addCase(fetchAppSettings.rejected, (state) => {
+            state.status = 'failed';
+        })
+        .addCase(saveUserTheme.fulfilled, (state, action) => {
+            state.userTheme = action.payload;
+        })
+        .addCase(saveUserWallpaper.fulfilled, (state, action) => {
+            state.userWallpaper = action.payload;
+        })
+        .addCase(saveDefaultThemeAndWallpaper.fulfilled, (state, action) => {
+            state.defaultTheme = action.payload.theme;
+            state.defaultWallpaper = action.payload.wallpaper;
+        })
+        .addCase(saveForecastingSettings.fulfilled, (state, action) => {
+            state.forecastingSettings = action.payload;
+        })
+        .addCase(saveCreditSettings.fulfilled, (state, action) => {
+            state.creditSettings = action.payload;
+        })
+        .addCase(saveCompanyLogo.fulfilled, (state, action) => {
+            state.companyLogo = action.payload;
+        })
+        .addCase(saveMaterialYouSeedColor.fulfilled, (state, action) => {
+            state.materialYouSeedColor = action.payload;
+        });
+  }
 });
 
 export const { 
     setActiveView, 
-    setUserTheme, 
-    setUserWallpaper, 
-    setDefaultThemeAndWallpaper,
     setOnlineStatus, 
-    setForecastingSettings, 
-    setCreditSettings, 
-    setCompanyLogo, 
     setShowWelcomePanel, 
-    setMaterialYouSeedColor
 } = appSlice.actions;
 
+// Rename old setters to avoid confusion, they are now async thunks
+export {
+    saveUserTheme as setUserTheme,
+    saveUserWallpaper as setUserWallpaper,
+    saveDefaultThemeAndWallpaper as setDefaultThemeAndWallpaper,
+    saveForecastingSettings as setForecastingSettings,
+    saveCreditSettings as setCreditSettings,
+    saveCompanyLogo as setCompanyLogo,
+    saveMaterialYouSeedColor as setMaterialYouSeedColor
+};
+
 export const selectActiveView = (state: RootState) => state.app.activeView;
+export const selectAppStatus = (state: RootState) => state.app.status;
 export const selectForecastingSettings = (state: RootState) => state.app.forecastingSettings;
 export const selectCreditSettings = (state: RootState) => state.app.creditSettings;
 export const selectCompanyLogo = (state: RootState) => state.app.companyLogo;

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { InventoryEvent } from '../../types';
-import { api } from '../../services/apiService';
+import { db } from '../../services/dbService';
 import { RootState } from '..';
 
 interface InventoryHistoryState {
@@ -16,14 +16,13 @@ const initialState: InventoryHistoryState = {
 };
 
 export const fetchInventoryHistory = createAsyncThunk('inventoryHistory/fetchInventoryHistory', async () => {
-  return await api.inventoryHistory.fetch();
+  return await db.inventoryHistory.toArray();
 });
 
 export const addInventoryEvents = createAsyncThunk('inventoryHistory/addInventoryEvents', async (events: InventoryEvent[], { getState }) => {
+    await db.inventoryHistory.bulkAdd(events);
     const state = getState() as RootState;
-    const updatedHistory = [...state.inventoryHistory.items, ...events];
-    await api.inventoryHistory.save(updatedHistory);
-    return updatedHistory;
+    return [...state.inventoryHistory.items, ...events];
 });
 
 const inventoryHistorySlice = createSlice({
@@ -43,6 +42,9 @@ const inventoryHistorySlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message || null;
       })
+      // We don't need a fulfilled case for addInventoryEvents if we don't plan to replace the entire state.
+      // The saveTransaction thunk will manage the related state updates.
+      // Let's add it just in case it's called independently.
       .addCase(addInventoryEvents.fulfilled, (state, action: PayloadAction<InventoryEvent[]>) => {
         state.items = action.payload;
       });

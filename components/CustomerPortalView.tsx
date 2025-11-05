@@ -328,9 +328,11 @@ export const CustomerPortalView: React.FC = () => {
         
         const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
+        // FIX: Added missing 'customerId' property to align with the Transaction type.
         const newTransaction: Transaction = {
             id: `WEB-${Date.now()}`,
             customer: customer,
+            customerId: customer.id,
             items: cart,
             subtotal: subtotal,
             discountAmount: 0,

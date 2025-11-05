@@ -105,7 +105,7 @@ const HistoryTab: React.FC = () => {
 
     const customerTransactions = useMemo(() => {
         return transactions
-            .filter(tx => tx.customer.id === user?.id)
+            .filter(tx => tx.customerId === user?.id)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [transactions, user]);
 
@@ -215,7 +215,7 @@ const DashboardTab: React.FC<{
 
     const pendingOrder = useMemo(() => {
         return transactions
-            .filter(tx => tx.customer.id === user?.id && tx.orderStatus === 'Pending')
+            .filter(tx => tx.customerId === user?.id && tx.orderStatus === 'Pending')
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
     }, [transactions, user]);
     
@@ -354,7 +354,7 @@ const ProfileTab: React.FC = () => {
     const customer = customers.find(c => c.id === user?.id);
     const theme = useAppSelector(selectActiveTheme);
     const activeWallpaper = useAppSelector(selectActiveWallpaper);
-    const APP_VERSION = '15.0.0';
+    const APP_VERSION = '15.5.0';
 
     const [formState, setFormState] = useState({
         name: customer?.name || '',
@@ -548,6 +548,7 @@ export const CustomerPortalView: React.FC = () => {
         const newTransaction: Transaction = {
             id: `WEB-${Date.now()}`,
             customer: customer,
+            customerId: customer.id,
             items: cart,
             subtotal: subtotal,
             discountAmount: 0,

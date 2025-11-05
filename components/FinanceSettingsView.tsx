@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { updateFinancePassword } from '../store/slices/authSlice';
+import { updatePassword } from '../store/slices/authSlice';
 import ThemeSwitcher from './ThemeSwitcher';
 import { AboutPanel } from './AboutPanel';
 import { setUserTheme, selectActiveWallpaper, setUserWallpaper, selectActiveTheme } from '../store/slices/appSlice';
@@ -8,7 +8,7 @@ import { Theme } from '../App';
 import { MaterialYouSettings } from './MaterialYouSettings';
 import { WallpaperGallery } from './WallpaperGallery';
 
-const APP_VERSION = '12.0.0';
+const APP_VERSION = '16.0.0';
 
 export const FinanceSettingsView: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -36,7 +36,7 @@ export const FinanceSettingsView: React.FC = () => {
             return;
         }
 
-        dispatch(updateFinancePassword({ currentPassword, newPassword }))
+        dispatch(updatePassword({ currentPassword, newPassword }))
             .unwrap()
             .then(() => {
                 setMessage({ type: 'success', text: 'Password updated successfully!' });
@@ -45,7 +45,7 @@ export const FinanceSettingsView: React.FC = () => {
                 setConfirmPassword('');
             })
             .catch((error) => {
-                setMessage({ type: 'error', text: error.message });
+                setMessage({ type: 'error', text: error.message || error });
             });
     };
     
