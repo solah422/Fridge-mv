@@ -18,6 +18,7 @@ import notificationsReducer from './slices/notificationsSlice';
 import monthlyStatementsReducer from './slices/monthlyStatementsSlice';
 import chaosReducer from './slices/chaosSlice';
 import customerGroupsReducer from './slices/customerGroupsSlice';
+import credentialsReducer from './slices/credentialsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -40,6 +41,7 @@ export const store = configureStore({
     monthlyStatements: monthlyStatementsReducer,
     chaos: chaosReducer,
     customerGroups: customerGroupsReducer,
+    credentials: credentialsReducer,
   },
    middleware: (getDefaultMiddleware) => getDefaultMiddleware({
     // Dexie's async nature can sometimes cause non-serializable values in actions

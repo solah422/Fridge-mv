@@ -78,7 +78,7 @@ export const generateActivationCode = createAsyncThunk(
 
         const code = generateOneTimeCode();
         await db.credentials.update(credential.id!, { oneTimeCode: code });
-        return { code };
+        return { redboxId, code };
     }
 );
 

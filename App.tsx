@@ -22,6 +22,8 @@ import { addNotification } from './store/slices/notificationsSlice';
 import { db } from './services/dbService';
 import { generateMaterialYouPalette } from './utils/materialYouTheme';
 import { fetchCustomerGroups } from './store/slices/customerGroupsSlice';
+import { hashPassword } from './utils/crypto';
+import { fetchCredentials } from './store/slices/credentialsSlice';
 
 import { POSView } from './components/POSView';
 import { InvoicesView } from './components/InvoicesView';
@@ -211,23 +213,68 @@ const App: React.FC = () => {
 
   // Initial data fetch
   useEffect(() => {
-    dispatch(fetchAppSettings());
-    dispatch(fetchCustomers());
-    dispatch(fetchCustomerGroups());
-    dispatch(fetchProducts());
-    dispatch(fetchTransactions());
-    dispatch(fetchWholesalers());
-    dispatch(fetchPurchaseOrders());
-    dispatch(fetchInventoryHistory());
-    dispatch(fetchLoyaltySettings());
-    dispatch(fetchGiftCards());
-    dispatch(fetchDailyReports());
-    dispatch(fetchPromotions());
-    dispatch(fetchProductRequests());
-    dispatch(fetchProductSuggestions());
-    dispatch(fetchPasswordResetRequests());
-    dispatch(fetchMonthlyStatements());
-    dispatch(fetchChaosSettings());
+    const initializeApp = async () => {
+      // Self-repair/First-time setup for core credentials
+      const ensureCoreCredentials = async () => {
+        try {
+          // Check for admin user
+          const adminUser = await db.credentials.where('username').equals('admin').first();
+          if (!adminUser) {
+            console.log("Admin user not found, creating one...");
+            const hashedPassword = await hashPassword('adminpass123');
+            await db.credentials.add({
+              username: 'admin',
+              hashedPassword: hashedPassword,
+              role: 'admin',
+              redboxId: null,
+              oneTimeCode: null
+            });
+            console.log("Admin user created.");
+          }
+
+          // Check for finance user
+          const financeUser = await db.credentials.where('username').equals('finance').first();
+          if (!financeUser) {
+            console.log("Finance user not found, creating one...");
+            const hashedPassword = await hashPassword('test');
+            await db.credentials.add({
+              username: 'finance',
+              hashedPassword: hashedPassword,
+              role: 'finance',
+              redboxId: null,
+              oneTimeCode: null
+            });
+            console.log("Finance user created.");
+          }
+        } catch (error) {
+          console.error("Error ensuring core credentials:", error);
+        }
+      };
+
+      await ensureCoreCredentials();
+
+      // Dispatch all data fetching thunks
+      dispatch(fetchAppSettings());
+      dispatch(fetchCredentials());
+      dispatch(fetchCustomers());
+      dispatch(fetchCustomerGroups());
+      dispatch(fetchProducts());
+      dispatch(fetchTransactions());
+      dispatch(fetchWholesalers());
+      dispatch(fetchPurchaseOrders());
+      dispatch(fetchInventoryHistory());
+      dispatch(fetchLoyaltySettings());
+      dispatch(fetchGiftCards());
+      dispatch(fetchDailyReports());
+      dispatch(fetchPromotions());
+      dispatch(fetchProductRequests());
+      dispatch(fetchProductSuggestions());
+      dispatch(fetchPasswordResetRequests());
+      dispatch(fetchMonthlyStatements());
+      dispatch(fetchChaosSettings());
+    };
+    
+    initializeApp();
   }, [dispatch]);
   
   // Automated Monthly Invoicing

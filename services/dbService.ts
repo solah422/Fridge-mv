@@ -78,7 +78,7 @@ db.version(2).stores({
     await tx.table('appSettings').where('key').equals('financePassword').delete();
     
     // 2. Hash default passwords
-    const adminHash = await hashPassword('admin');
+    const adminHash = await hashPassword('adminpass123');
     const financeHash = await hashPassword('test');
 
     // 3. Populate new credentials table with secure admin/finance accounts
@@ -94,7 +94,7 @@ db.on('populate', async () => {
     await db.products.bulkAdd(INITIAL_PRODUCTS);
     await db.wholesalers.bulkAdd(INITIAL_WHOLESALERS);
     
-    const adminHash = await hashPassword('admin');
+    const adminHash = await hashPassword('adminpass123');
     const financeHash = await hashPassword('test');
 
     await db.credentials.bulkAdd([

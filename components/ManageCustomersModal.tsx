@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Customer, CustomerGroup } from '../types';
-import { useAppSelector } from '../store/hooks';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Customer, CustomerGroup, Credential } from '../types';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { selectCreditSettings } from '../store/slices/appSlice';
+import { selectAllCredentials } from '../store/slices/credentialsSlice';
+import { generateActivationCode } from '../store/slices/customersSlice';
+import { addNotification } from '../store/slices/notificationsSlice';
 
 interface ManageCustomersModalProps {
   isOpen: boolean;
@@ -21,14 +24,18 @@ const InputField: React.FC<any> = ({ label, ...props }) => (
 );
 
 export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOpen, customers, customerGroups, onSave, onRemove, onClose, customerToEdit }) => {
+    const dispatch = useAppDispatch();
     const isEditing = customerToEdit !== null;
     const { defaultCreditLimit } = useAppSelector(selectCreditSettings);
+    const allCredentials = useAppSelector(selectAllCredentials);
+
     const [form, setForm] = useState({
         name: '', email: '', phone: '', telegramId: '', redboxId: '',
         address: '', notes: '', tags: '', password: '', maximumCreditLimit: defaultCreditLimit.toString(),
         groupId: '',
     });
     const [error, setError] = useState('');
+    const [currentCredential, setCurrentCredential] = useState<Credential | null>(null);
 
     useEffect(() => {
       if (isOpen) {
@@ -45,14 +52,44 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
             maximumCreditLimit: customerToEdit?.maximumCreditLimit?.toString() || defaultCreditLimit.toString(),
             groupId: customerToEdit?.groupId?.toString() || '',
         });
+
+        if (customerToEdit && customerToEdit.redboxId) {
+            const cred = allCredentials.find(c => c.redboxId === customerToEdit.redboxId);
+            setCurrentCredential(cred || null);
+        } else {
+            setCurrentCredential(null);
+        }
+
         setError('');
       }
-    }, [isOpen, customerToEdit, defaultCreditLimit]);
+    }, [isOpen, customerToEdit, defaultCreditLimit, allCredentials]);
 
     if (!isOpen) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleGenerateCode = () => {
+        if (!customerToEdit || !customerToEdit.redboxId) return;
+        
+        if (window.confirm(`Are you sure you want to generate a new activation code for ${customerToEdit.name}? Any existing code will be overwritten.`)) {
+            dispatch(generateActivationCode(customerToEdit.redboxId))
+                .unwrap()
+                .then(payload => {
+                    // Instantly update the UI field
+                    setCurrentCredential(prev => prev ? { ...prev, oneTimeCode: payload.code } : null);
+
+                    dispatch(addNotification({
+                        type: 'success',
+                        message: `New code for ${customerToEdit.name}: ${payload.code}`,
+                        duration: 15000,
+                    }));
+                })
+                .catch(err => {
+                    dispatch(addNotification({ type: 'error', message: err.message || 'Failed to generate code.' }));
+                });
+        }
     };
 
     const handleSave = () => {
@@ -148,6 +185,30 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <InputField label="Redbox ID (Login)" name="redboxId" type="number" value={form.redboxId} onChange={handleChange} />
                             <InputField label={isEditing ? "New Password (optional)" : "Password (optional)"} name="password" type="password" value={form.password} onChange={handleChange} />
+                            
+                            {isEditing && (
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">One-Time Activation Code</label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            id="oneTimeCodeDisplay"
+                                            type="text"
+                                            value={currentCredential?.oneTimeCode || 'N/A'}
+                                            readOnly
+                                            className="w-full p-2 border border-[rgb(var(--color-border))] rounded bg-[rgb(var(--color-bg-subtle))] text-[rgb(var(--color-text-muted))] focus:outline-none"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerateCode}
+                                            disabled={!customerToEdit?.redboxId}
+                                            className="px-4 py-2 bg-blue-100 text-blue-800 text-sm font-semibold rounded-md hover:bg-blue-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Generate New Code
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <InputField label="Maximum Credit Limit (MVR)" name="maximumCreditLimit" type="number" value={form.maximumCreditLimit} onChange={handleChange} />
                             <div>
                                 <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">Credit Status</label>
