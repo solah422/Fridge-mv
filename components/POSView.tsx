@@ -187,9 +187,8 @@ export const POSView: React.FC = () => {
   }, [selectedCustomer, cart, appliedPromo, appliedGiftCard, allTransactions]); // Dependencies are crucial here
 
   return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className={isCartVisible ? "lg:col-span-2" : "lg:col-span-3 transition-all duration-300"}>
+    <div className="relative">
+      <div className={`transition-all duration-500 ease-in-out ${isCartVisible ? 'mr-0 lg:mr-[26rem]' : 'mr-0'}`}>
           <CustomerSelector
             selectedCustomer={selectedCustomer}
             onSelectCustomer={setSelectedCustomer}
@@ -202,51 +201,31 @@ export const POSView: React.FC = () => {
             onCategoryChange={setCategoryFilter}
             getBundleStock={getBundleStock}
           />
-        </div>
-        {isCartVisible && (
-          <div className="lg:col-span-1">
-            <Cart
-              cart={cart}
-              onUpdateQuantity={updateQuantity}
-              subtotal={subtotal}
-              total={total}
-              onSave={handleSaveTransaction}
-              onClear={clearCart}
-              isSaveDisabled={!selectedCustomer || cart.length === 0}
-              discountAmount={discountAmount}
-              promoCodeInput={promoCodeInput}
-              setPromoCodeInput={setPromoCodeInput}
-              // FIX: Corrected prop name from 'onApplyPromoCode' to the defined handler 'handleApplyPromoCode'.
-              onApplyPromoCode={handleApplyPromoCode}
-              appliedPromo={appliedPromo}
-              onRemovePromo={handleRemovePromo}
-              promoError={promoError}
-              giftCardCode={giftCardCode}
-              setGiftCardCode={setGiftCardCode}
-              onApplyGiftCard={handleApplyGiftCard}
-              appliedGiftCard={appliedGiftCard}
-              removeGiftCard={() => setAppliedGiftCard(null)}
-              onToggleVisibility={() => setIsCartVisible(false)}
-            />
-          </div>
-        )}
       </div>
-      {!isCartVisible && (
-        <button
-          onClick={() => setIsCartVisible(true)}
-          className="fixed bottom-8 right-8 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] w-16 h-16 rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform z-40"
-          aria-label="Show order cart"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          {cart.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-[rgb(var(--color-bg-card))]">
-              {cart.reduce((acc, item) => acc + item.quantity, 0)}
-            </span>
-          )}
-        </button>
-      )}
-    </>
+
+      <Cart
+        cart={cart}
+        isCartVisible={isCartVisible}
+        onToggleVisibility={() => setIsCartVisible(!isCartVisible)}
+        onUpdateQuantity={updateQuantity}
+        subtotal={subtotal}
+        total={total}
+        onSave={handleSaveTransaction}
+        onClear={clearCart}
+        isSaveDisabled={!selectedCustomer || cart.length === 0}
+        discountAmount={discountAmount}
+        promoCodeInput={promoCodeInput}
+        setPromoCodeInput={setPromoCodeInput}
+        onApplyPromoCode={handleApplyPromoCode}
+        appliedPromo={appliedPromo}
+        onRemovePromo={handleRemovePromo}
+        promoError={promoError}
+        giftCardCode={giftCardCode}
+        setGiftCardCode={setGiftCardCode}
+        onApplyGiftCard={handleApplyGiftCard}
+        appliedGiftCard={appliedGiftCard}
+        removeGiftCard={() => setAppliedGiftCard(null)}
+      />
+    </div>
   );
 };

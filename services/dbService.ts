@@ -5,7 +5,7 @@ import {
     ProductSuggestion, PasswordResetRequest, MonthlyStatement, ChaosSettings, CustomerGroup,
     Credential
 } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_WHOLESALERS } from '../constants';
+import { INITIAL_PRODUCTS, INITIAL_WHOLESALERS, INITIAL_CUSTOMERS } from '../constants';
 import { hashPassword } from '../utils/crypto';
 
 // Define the shape of the settings table
@@ -93,14 +93,29 @@ db.version(2).stores({
 db.on('populate', async () => {
     await db.products.bulkAdd(INITIAL_PRODUCTS);
     await db.wholesalers.bulkAdd(INITIAL_WHOLESALERS);
+    await db.customers.bulkAdd(INITIAL_CUSTOMERS);
     
     const adminHash = await hashPassword('adminpass123');
     const financeHash = await hashPassword('test');
 
-    await db.credentials.bulkAdd([
-        { username: 'admin', hashedPassword: adminHash, role: 'admin' },
-        { username: 'finance', hashedPassword: financeHash, role: 'finance' },
-    ]);
+    const initialCredentials: Omit<Credential, 'id'>[] = [
+        { username: 'admin', hashedPassword: adminHash, role: 'admin', redboxId: null, oneTimeCode: null },
+        { username: 'finance', hashedPassword: financeHash, role: 'finance', redboxId: null, oneTimeCode: null },
+    ];
+
+    // Create credential stubs for each customer
+    INITIAL_CUSTOMERS.forEach(customer => {
+        if (customer.redboxId) {
+            initialCredentials.push({
+                redboxId: customer.redboxId,
+                role: 'customer',
+                hashedPassword: null,
+                oneTimeCode: null
+            });
+        }
+    });
+
+    await db.credentials.bulkAdd(initialCredentials as Credential[]);
 
     // Default settings
     await db.appSettings.bulkAdd([

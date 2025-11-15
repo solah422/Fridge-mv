@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Product } from '../types';
 import { useAppSelector } from '../store/hooks';
 import fuzzySearch from '../services/fuseService';
@@ -12,15 +12,51 @@ interface ProductGridProps {
   getBundleStock: (product: Product) => number;
 }
 
-const ProductCard: React.FC<{ product: Product; onAddToCart: (product: Product) => void; }> = ({ product, onAddToCart }) => (
+const ProductCard: React.FC<{ product: Product; onAddToCart: (product: Product) => void; }> = ({ product, onAddToCart }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const { clientX, clientY, currentTarget } = e;
+    const { left, top, width, height } = currentTarget.getBoundingClientRect();
+    
+    const x = clientX - left;
+    const y = clientY - top;
+
+    const rotateX = ((y / height) - 0.5) * -20; // Max rotation ±10deg
+    const rotateY = ((x / width) - 0.5) * 20;  // Max rotation ±10deg
+
+    cardRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+    cardRef.current.style.transition = 'transform 0.05s linear'; // fast transition while moving
+  };
+
+  const handleMouseLeave = () => {
+    if (!cardRef.current) return;
+    cardRef.current.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+    cardRef.current.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'; // slower, smoother transition on exit
+  };
+  
+  return (
   <div 
-    className="relative bg-[rgb(var(--color-bg-subtle))] rounded-lg shadow-md overflow-hidden cursor-pointer transform hover:scale-105 transition-transform duration-200"
+    ref={cardRef}
+    className="relative bg-[rgb(var(--color-bg-subtle))] rounded-lg shadow-md overflow-hidden cursor-pointer"
+    style={{ transformStyle: 'preserve-3d', transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
     onClick={() => product.stock > 0 && onAddToCart(product)}
+    onMouseMove={handleMouseMove}
+    onMouseLeave={handleMouseLeave}
   >
     {product.isBundle && (
-      <span className="absolute top-2 right-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] text-xs font-semibold px-2 py-1 rounded-full">Bundle</span>
+      <span 
+        className="absolute top-2 right-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] text-xs font-semibold px-2 py-1 rounded-full z-10"
+        style={{ transform: 'translateZ(40px)' }}
+      >
+        Bundle
+      </span>
     )}
-    <div className={`p-4 ${product.stock === 0 ? 'opacity-50' : ''}`}>
+    <div 
+      className={`p-4 ${product.stock === 0 ? 'opacity-50' : ''}`}
+      style={{ transform: 'translateZ(20px)' }}
+    >
       <h3 className="font-semibold text-[rgb(var(--color-text-base))] truncate">{product.name}</h3>
       <p className="text-[rgb(var(--color-text-muted))] font-bold mt-1">MVR {product.price.toFixed(2)}</p>
       <p className={`text-sm mt-2 ${product.stock > 10 ? 'text-green-600 dark:text-green-400' : product.stock > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
@@ -29,6 +65,7 @@ const ProductCard: React.FC<{ product: Product; onAddToCart: (product: Product) 
     </div>
   </div>
 );
+};
 
 export const ProductGrid: React.FC<ProductGridProps> = ({ 
   onAddToCart, 
