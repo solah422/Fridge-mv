@@ -19,10 +19,8 @@ import { fetchChaosSettings } from './store/slices/chaosSlice';
 import { Product, Wholesaler, PurchaseOrder, InventoryEvent, Transaction, Customer, LoyaltySettings, MonthlyStatement } from './types';
 import { logout, selectUser } from './store/slices/authSlice';
 import { addNotification } from './store/slices/notificationsSlice';
-import { db } from './services/dbService';
 import { generateMaterialYouPalette } from './utils/materialYouTheme';
 import { fetchCustomerGroups } from './store/slices/customerGroupsSlice';
-import { hashPassword } from './utils/crypto';
 import { fetchCredentials } from './store/slices/credentialsSlice';
 
 import { POSView } from './components/POSView';
@@ -39,7 +37,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
 import { WelcomePanel } from './components/WelcomePanel';
 
-const APP_VERSION = '16.0.0';
+const APP_VERSION = '17.0.0';
 
 // FIX: Added 'requests' to the View type to allow it as a valid view, resolving type comparison errors.
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
@@ -194,9 +192,6 @@ const App: React.FC = () => {
   const activeWallpaper = useAppSelector(selectActiveWallpaper);
   const user = useAppSelector(selectUser);
   const appStatus = useAppSelector(selectAppStatus);
-  const transactions = useAppSelector(state => state.transactions.items);
-  const customers = useAppSelector(state => state.customers.items);
-  const monthlyStatements = useAppSelector(state => state.monthlyStatements.items);
   const showWelcomePanel = useAppSelector(state => state.app.showWelcomePanel);
   const appContainerRef = useRef<HTMLDivElement>(null);
 
@@ -211,49 +206,10 @@ const App: React.FC = () => {
     }
   }, [user, dispatch]);
 
-  // Initial data fetch
+  // Initial data fetch from API
   useEffect(() => {
     const initializeApp = async () => {
-      // Self-repair/First-time setup for core credentials
-      const ensureCoreCredentials = async () => {
-        try {
-          // Check for admin user
-          const adminUser = await db.credentials.where('username').equals('admin').first();
-          if (!adminUser) {
-            console.log("Admin user not found, creating one...");
-            const hashedPassword = await hashPassword('adminpass123');
-            await db.credentials.add({
-              username: 'admin',
-              hashedPassword: hashedPassword,
-              role: 'admin',
-              redboxId: null,
-              oneTimeCode: null
-            });
-            console.log("Admin user created.");
-          }
-
-          // Check for finance user
-          const financeUser = await db.credentials.where('username').equals('finance').first();
-          if (!financeUser) {
-            console.log("Finance user not found, creating one...");
-            const hashedPassword = await hashPassword('test');
-            await db.credentials.add({
-              username: 'finance',
-              hashedPassword: hashedPassword,
-              role: 'finance',
-              redboxId: null,
-              oneTimeCode: null
-            });
-            console.log("Finance user created.");
-          }
-        } catch (error) {
-          console.error("Error ensuring core credentials:", error);
-        }
-      };
-
-      await ensureCoreCredentials();
-
-      // Dispatch all data fetching thunks
+      // Dispatch all data fetching thunks. These now call the backend API.
       dispatch(fetchAppSettings());
       dispatch(fetchCredentials());
       dispatch(fetchCustomers());
@@ -274,161 +230,12 @@ const App: React.FC = () => {
       dispatch(fetchChaosSettings());
     };
     
-    initializeApp();
-  }, [dispatch]);
+    // Only fetch data if a user is logged in
+    if (user) {
+        initializeApp();
+    }
+  }, [dispatch, user]);
   
-  // Automated Monthly Invoicing
-  useEffect(() => {
-    if (user?.role === 'admin' && transactions.length > 0 && customers.length > 0) {
-        const runMonthlyInvoicing = async () => {
-            const lastRunSetting = await db.appSettings.get('lastInvoicingRun');
-            const lastRun = lastRunSetting ? lastRunSetting.value as string : '2023-01';
-            
-            const [lastRunYear, lastRunMonth] = lastRun.split('-').map(Number);
-            
-            let currentDate = new Date(lastRunYear, lastRunMonth, 1);
-            const today = new Date();
-            
-            const monthsToProcess: Date[] = [];
-
-            while (currentDate < today) {
-                const isPastMonth = currentDate.getFullYear() < today.getFullYear() || 
-                                    (currentDate.getFullYear() === today.getFullYear() && currentDate.getMonth() < today.getMonth());
-                if (isPastMonth) {
-                    monthsToProcess.push(new Date(currentDate));
-                }
-                currentDate.setMonth(currentDate.getMonth() + 1);
-            }
-            
-            if (monthsToProcess.length === 0) return;
-
-            console.log(`Processing monthly invoices for ${monthsToProcess.length} month(s).`);
-            let newStatements: MonthlyStatement[] = [];
-
-            for (const monthDate of monthsToProcess) {
-                const year = monthDate.getFullYear();
-                const month = monthDate.getMonth(); // 0-indexed
-                
-                const startOfMonth = new Date(year, month, 1);
-                const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59);
-
-                const transactionsForMonth = transactions.filter(tx => {
-                    const txDate = new Date(tx.date);
-                    return txDate >= startOfMonth && txDate <= endOfMonth && tx.paymentStatus === 'unpaid';
-                });
-
-                const customerTxMap = new Map<number, Transaction[]>();
-                transactionsForMonth.forEach(tx => {
-                    if (!customerTxMap.has(tx.customerId)) {
-                        customerTxMap.set(tx.customerId, []);
-                    }
-                    customerTxMap.get(tx.customerId)!.push(tx);
-                });
-
-                customerTxMap.forEach((txs, customerId) => {
-                    const customer = customers.find(c => c.id === customerId);
-                    if (!customer) return;
-
-                    const totalDue = txs.reduce((sum, tx) => sum + tx.total, 0);
-                    
-                    const dueDate = new Date(year, month + 1, 7); // Due on the 7th of next month
-
-                    const statement: MonthlyStatement = {
-                        id: `MS-${year}-${month + 1}-${customerId}`,
-                        customerId,
-                        customerName: customer.name,
-                        billingPeriodStart: startOfMonth.toISOString(),
-                        billingPeriodEnd: endOfMonth.toISOString(),
-                        generatedAt: new Date().toISOString(),
-                        dueDate: dueDate.toISOString(),
-                        transactions: txs,
-                        totalDue,
-                        status: 'due',
-                        overdueStatus: 'none',
-                    };
-                    newStatements.push(statement);
-                });
-            }
-
-            if (newStatements.length > 0) {
-                await dispatch(addMonthlyStatements(newStatements));
-                dispatch(addNotification({type: 'success', message: `Generated ${newStatements.length} new monthly statements.`}));
-            }
-            
-            const lastProcessedMonth = monthsToProcess[monthsToProcess.length - 1];
-            await db.appSettings.put({ key: 'lastInvoicingRun', value: `${lastProcessedMonth.getFullYear()}-${lastProcessedMonth.getMonth() + 1}` });
-        };
-        
-        runMonthlyInvoicing();
-    }
-  }, [user, transactions, customers, dispatch]);
-
-  // Daily check for overdue invoices and credit blocking
-  useEffect(() => {
-    if (user?.role === 'admin' && monthlyStatements.length > 0 && customers.length > 0) {
-      const runOverdueCheck = async () => {
-        const todayStr = new Date().toISOString().split('T')[0];
-        const lastCheckSetting = await db.appSettings.get('lastOverdueCheck');
-        const lastCheck = lastCheckSetting ? lastCheckSetting.value as string : '';
-
-        if (todayStr === lastCheck) return; // Already ran today
-        
-        console.log("Running daily overdue check...");
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        let statementsToUpdate: MonthlyStatement[] = [];
-        let customersToBlock = new Set<number>();
-        let newlyOverdueCustomers = new Set<string>();
-
-        monthlyStatements.forEach(statement => {
-          if (statement.status === 'due' && statement.overdueStatus !== '7_days_overdue') {
-            const dueDate = new Date(statement.dueDate);
-            const sevenDaysAfterDue = new Date(dueDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-            
-            if (today >= sevenDaysAfterDue) {
-              statementsToUpdate.push({ ...statement, overdueStatus: '7_days_overdue' });
-              customersToBlock.add(statement.customerId);
-              newlyOverdueCustomers.add(statement.customerName);
-            }
-          } else if (statement.overdueStatus === '7_days_overdue') {
-              customersToBlock.add(statement.customerId);
-          }
-        });
-
-        // Update statements
-        for(const stmt of statementsToUpdate) {
-            await dispatch(updateMonthlyStatement(stmt));
-        }
-
-        // Update customers
-        const updatedCustomers = customers.map(customer => {
-            if (customersToBlock.has(customer.id)) {
-                return { ...customer, creditBlocked: true };
-            }
-            // Also unblock customers who have no overdue invoices
-            const hasOverdue = monthlyStatements.some(s => s.customerId === customer.id && s.overdueStatus === '7_days_overdue' && s.status === 'due');
-            if (!hasOverdue && customer.creditBlocked) {
-                return { ...customer, creditBlocked: false };
-            }
-            return customer;
-        });
-
-        await dispatch(updateCustomers(updatedCustomers));
-        
-        if (newlyOverdueCustomers.size > 0) {
-            const names = Array.from(newlyOverdueCustomers).join(', ');
-            dispatch(addNotification({ type: 'error', message: `Accounts for ${names} are overdue and have been credit blocked.`, duration: 10000 }));
-        }
-
-        await db.appSettings.put({ key: 'lastOverdueCheck', value: todayStr });
-      };
-
-      runOverdueCheck();
-    }
-  }, [user, monthlyStatements, customers, dispatch]);
-
   // Online/Offline status handling
   useEffect(() => {
     const updateStatus = () => dispatch(setOnlineStatus(navigator.onLine));
@@ -486,7 +293,7 @@ const App: React.FC = () => {
   }, [theme, materialYouSeedColor]);
 
   const renderContent = () => {
-    if (appStatus !== 'succeeded') {
+    if (appStatus === 'loading' && user) {
         return <div className="flex justify-center items-center min-h-screen text-lg">Loading App Data...</div>
     }
     if (!user) {

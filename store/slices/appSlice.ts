@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createSelector, createAsyncThunk } from '@reduxjs/toolkit';
-import { RootState } from '..';
+import type { RootState } from '..';
 import { Theme } from '../../App';
-import { db, getAllAppSettings } from '../../services/dbService';
+import { api } from '../../services/apiService';
 
 type View = 'dashboard' | 'pos' | 'invoices' | 'inventory' | 'reports' | 'customers' | 'settings' | 'requests';
 
@@ -45,51 +45,48 @@ const initialState: AppState = {
   status: 'idle',
 };
 
-// --- Async Thunks for Dexie interaction ---
+// --- Async Thunks for API interaction ---
 
 export const fetchAppSettings = createAsyncThunk('app/fetchAppSettings', async () => {
-    return await getAllAppSettings();
+    return await api.get<any>('/settings');
 });
 
 export const saveUserTheme = createAsyncThunk('app/saveUserTheme', async (theme: Theme) => {
-    await db.appSettings.put({ key: 'userTheme', value: theme });
+    await api.post('/settings', { key: 'userTheme', value: theme });
     return theme;
 });
 
 export const saveUserWallpaper = createAsyncThunk('app/saveUserWallpaper', async (wallpaper: string | null) => {
-    await db.appSettings.put({ key: 'userWallpaper', value: wallpaper });
+    await api.post('/settings', { key: 'userWallpaper', value: wallpaper });
     return wallpaper;
 });
 
 export const saveDefaultThemeAndWallpaper = createAsyncThunk('app/saveDefaultThemeAndWallpaper', async (payload: { theme: Theme, wallpaper: string | null }) => {
-    await db.transaction('rw', db.appSettings, async () => {
-        await db.appSettings.put({ key: 'defaultTheme', value: payload.theme });
-        await db.appSettings.put({ key: 'defaultWallpaper', value: payload.wallpaper });
-    });
+    await api.post('/settings', { key: 'defaultThemeAndWallpaper', value: payload });
     return payload;
 });
 
 export const saveForecastingSettings = createAsyncThunk('app/saveForecastingSettings', async (settings: Partial<ForecastingSettings>, {getState}) => {
     const state = getState() as RootState;
     const newSettings = { ...state.app.forecastingSettings, ...settings };
-    await db.appSettings.put({ key: 'forecastingSettings', value: newSettings });
+    await api.post('/settings', { key: 'forecastingSettings', value: newSettings });
     return newSettings;
 });
 
 export const saveCreditSettings = createAsyncThunk('app/saveCreditSettings', async (settings: Partial<CreditSettings>, {getState}) => {
     const state = getState() as RootState;
     const newSettings = { ...state.app.creditSettings, ...settings };
-    await db.appSettings.put({ key: 'creditSettings', value: newSettings });
+    await api.post('/settings', { key: 'creditSettings', value: newSettings });
     return newSettings;
 });
 
 export const saveCompanyLogo = createAsyncThunk('app/saveCompanyLogo', async (logo: string | null) => {
-    await db.appSettings.put({ key: 'companyLogo', value: logo });
+    await api.post('/settings', { key: 'companyLogo', value: logo });
     return logo;
 });
 
 export const saveMaterialYouSeedColor = createAsyncThunk('app/saveMaterialYouSeedColor', async (color: string) => {
-    await db.appSettings.put({ key: 'materialYouSeedColor', value: color });
+    await api.post('/settings', { key: 'materialYouSeedColor', value: color });
     return color;
 });
 

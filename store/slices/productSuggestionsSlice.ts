@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { ProductSuggestion } from '../../types';
-import { db } from '../../services/dbService';
-import { RootState } from '..';
+import { api } from '../../services/apiService';
+import type { RootState } from '..';
 
 interface ProductSuggestionsState {
   items: ProductSuggestion[];
@@ -14,24 +14,17 @@ const initialState: ProductSuggestionsState = {
 };
 
 export const fetchProductSuggestions = createAsyncThunk('productSuggestions/fetch', async () => {
-  return await db.productSuggestions.toArray();
+  return await api.get<ProductSuggestion[]>('/product-suggestions');
 });
 
 export const updateProductSuggestions = createAsyncThunk('productSuggestions/update', async (suggestions: ProductSuggestion[]) => {
-    await db.productSuggestions.bulkPut(suggestions);
-    return suggestions;
+    return await api.put<ProductSuggestion[]>('/product-suggestions', suggestions);
 });
 
 export const addProductSuggestion = createAsyncThunk(
     'productSuggestions/add',
     async (suggestionData: Omit<ProductSuggestion, 'id' | 'createdAt' | 'status'>) => {
-        const newSuggestion: ProductSuggestion = {
-            ...suggestionData,
-            id: `SUG-${Date.now()}`,
-            createdAt: new Date().toISOString(),
-            status: 'pending',
-        };
-        await db.productSuggestions.add(newSuggestion);
+        const newSuggestion = await api.post<ProductSuggestion>('/product-suggestions', suggestionData);
         return newSuggestion;
     }
 );

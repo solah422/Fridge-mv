@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { GiftCard } from '../../types';
-import { db } from '../../services/dbService';
-import { RootState } from '..';
+import { api } from '../../services/apiService';
+import type { RootState } from '..';
 
 interface GiftCardState {
   items: GiftCard[];
@@ -16,27 +16,17 @@ const initialState: GiftCardState = {
 };
 
 export const fetchGiftCards = createAsyncThunk('giftCards/fetchGiftCards', async () => {
-  return await db.giftCards.toArray();
+  return await api.get<GiftCard[]>('/gift-cards');
 });
 
 export const saveGiftCards = createAsyncThunk('giftCards/saveGiftCards', async (cards: GiftCard[]) => {
-    await db.giftCards.bulkPut(cards);
-    return cards;
+    return await api.put<GiftCard[]>('/gift-cards', cards);
 });
 
 export const createGiftCard = createAsyncThunk(
     'giftCards/createGiftCard',
-    async (cardData: { initialBalance: number; customerId: number; expiryDate?: string; }, { getState }) => {
-        const newCard: GiftCard = {
-            id: `GC-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
-            createdAt: new Date().toISOString(),
-            initialBalance: cardData.initialBalance,
-            currentBalance: cardData.initialBalance,
-            isEnabled: true,
-            customerId: cardData.customerId,
-            expiryDate: cardData.expiryDate,
-        };
-        await db.giftCards.add(newCard);
+    async (cardData: { initialBalance: number; customerId: number; expiryDate?: string; }) => {
+        const newCard = await api.post<GiftCard>('/gift-cards', cardData);
         return newCard;
     }
 );

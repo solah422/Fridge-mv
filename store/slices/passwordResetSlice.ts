@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { PasswordResetRequest } from '../../types';
-import { db } from '../../services/dbService';
-import { RootState } from '..';
-import { generateOneTimeCode } from '../../utils/crypto';
+import { api } from '../../services/apiService';
+import type { RootState } from '..';
 import { addNotification } from './notificationsSlice';
 
 interface PasswordResetState {
@@ -16,63 +15,36 @@ const initialState: PasswordResetState = {
 };
 
 export const fetchPasswordResetRequests = createAsyncThunk('passwordReset/fetch', async () => {
-  return await db.passwordResetRequests.toArray();
+  return await api.get<PasswordResetRequest[]>('/password-reset/requests');
 });
 
 export const addPasswordResetRequest = createAsyncThunk(
     'passwordReset/add',
     async (requestData: Omit<PasswordResetRequest, 'id' | 'createdAt' | 'status'>) => {
-        const newRequest: PasswordResetRequest = {
-            ...requestData,
-            id: `RESET-${Date.now()}`,
-            createdAt: new Date().toISOString(),
-            status: 'pending',
-        };
-        await db.passwordResetRequests.add(newRequest);
-        return newRequest;
+        return await api.post<PasswordResetRequest>('/password-reset/request', requestData);
     }
 );
 
 export const updatePasswordResetRequests = createAsyncThunk('passwordReset/update', async (requests: PasswordResetRequest[]) => {
-    await db.passwordResetRequests.bulkPut(requests);
-    return requests;
+    return await api.put<PasswordResetRequest[]>('/password-reset/requests', requests);
 });
 
 export const approvePasswordReset = createAsyncThunk(
     'passwordReset/approve',
-    async (requestId: string, { getState, dispatch, rejectWithValue }) => {
-        const state = getState() as RootState;
-        const request = state.passwordReset.items.find(r => r.id === requestId);
-
-        if (!request) {
-            return rejectWithValue('Request not found.');
+    async (requestId: string, { dispatch, rejectWithValue }) => {
+        try {
+            const { newCode, customerName } = await api.post<{ newCode: string, customerName: string }>(`/password-reset/approve`, { requestId });
+            dispatch(addNotification({
+                type: 'success',
+                message: `Reset approved for ${customerName}. New one-time code: ${newCode}`,
+                duration: 15000
+            }));
+            // Refetch all requests to get the updated list
+            const updatedRequests = await api.get<PasswordResetRequest[]>('/password-reset/requests');
+            return updatedRequests;
+        } catch (error: any) {
+            return rejectWithValue(error.message);
         }
-
-        const credential = await db.credentials.where('redboxId').equals(request.redboxId).first();
-        if (!credential) {
-            return rejectWithValue('Credential for customer not found.');
-        }
-
-        const newCode = generateOneTimeCode();
-
-        await db.transaction('rw', db.credentials, db.passwordResetRequests, async () => {
-            // 1. Reset password and set new one-time code
-            await db.credentials.update(credential.id!, {
-                hashedPassword: null,
-                oneTimeCode: newCode
-            });
-            // 2. Mark request as completed
-            await db.passwordResetRequests.update(requestId, { status: 'completed' });
-        });
-
-        dispatch(addNotification({
-            type: 'success',
-            message: `Reset approved for ${request.customerName}. New one-time code: ${newCode}`,
-            duration: 15000 // Keep notification on screen longer
-        }));
-        
-        // Return updated list of requests
-        return await db.passwordResetRequests.toArray();
     }
 );
 

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { ChaosSettings, ImpulseBuySettings, PantryLotterySettings, DebtDerbySettings, AIPersonalitySwapSettings, AIPersonality, ItemBountyBoardSettings, POSMascotSettings } from '../../types';
-import { db } from '../../services/dbService';
-import { RootState } from '..';
+import { api } from '../../services/apiService';
+import type { RootState } from '..';
 
 interface ChaosState {
   settings: ChaosSettings | null;
@@ -14,19 +14,18 @@ const initialState: ChaosState = {
 };
 
 export const fetchChaosSettings = createAsyncThunk('chaos/fetchSettings', async () => {
-    const setting = await db.appSettings.get('chaosSettings');
-    // This could be undefined on first run before seeding
-    return setting?.value as ChaosSettings | null;
+    const response = await api.get<{value: ChaosSettings | null}>('/settings/chaos');
+    return response.value;
 });
 
 export const saveChaosSettings = createAsyncThunk(
   'chaos/saveSettings',
   async (settings: ChaosSettings, { rejectWithValue }) => {
     try {
-      await db.appSettings.put({ key: 'chaosSettings', value: settings });
-      return settings;
-    } catch (error) {
-      return rejectWithValue('Failed to save settings');
+      const response = await api.post<ChaosSettings>('/settings/chaos', settings);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to save settings');
     }
   }
 );

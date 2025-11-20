@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Credential } from '../../types';
-import { db } from '../../services/dbService';
-import { RootState } from '..';
-import { generateActivationCode } from './customersSlice'; // Import the specific thunk
+import { api } from '../../services/apiService';
+import type { RootState } from '..';
+import { generateActivationCode } from './customersSlice'; 
 
 interface CredentialsState {
   items: Credential[];
@@ -14,8 +14,9 @@ const initialState: CredentialsState = {
   status: 'idle',
 };
 
+// This might be an admin-only endpoint
 export const fetchCredentials = createAsyncThunk('credentials/fetchCredentials', async () => {
-  const response = await db.credentials.toArray();
+  const response = await api.get<Credential[]>('/credentials');
   return response;
 });
 
@@ -35,6 +36,7 @@ const credentialsSlice = createSlice({
       .addCase(fetchCredentials.rejected, (state) => {
         state.status = 'failed';
       })
+      // When a new activation code is generated via customersSlice, update it here too.
       .addCase(generateActivationCode.fulfilled, (state, action: PayloadAction<{ redboxId: number; code: string }>) => {
         const { redboxId, code } = action.payload;
         const index = state.items.findIndex(cred => cred.redboxId === redboxId);

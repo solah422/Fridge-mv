@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Promotion } from '../../types';
-import { db } from '../../services/dbService';
-import { RootState } from '..';
+import { api } from '../../services/apiService';
+import type { RootState } from '..';
 
 interface PromotionsState {
   items: Promotion[];
@@ -16,13 +16,11 @@ const initialState: PromotionsState = {
 };
 
 export const fetchPromotions = createAsyncThunk('promotions/fetchPromotions', async () => {
-  const response = await db.promotions.toArray();
-  return response;
+  return await api.get<Promotion[]>('/promotions');
 });
 
 export const updatePromotions = createAsyncThunk('promotions/updatePromotions', async (promotions: Promotion[]) => {
-    await db.promotions.bulkPut(promotions);
-    return promotions;
+    return await api.put<Promotion[]>('/promotions', promotions);
 });
 
 const promotionsSlice = createSlice({

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { DailyReport } from '../../types';
-import { db } from '../../services/dbService';
-import { RootState } from '..';
+import { api } from '../../services/apiService';
+import type { RootState } from '..';
 
 interface ReportsState {
   dailyReports: DailyReport[];
@@ -16,12 +16,12 @@ const initialState: ReportsState = {
 };
 
 export const fetchDailyReports = createAsyncThunk('reports/fetchDailyReports', async () => {
-  return await db.dailyReports.toArray();
+  return await api.get<DailyReport[]>('/reports/daily');
 });
 
+// The backend will generate the report based on transactions for the day
 export const addDailyReport = createAsyncThunk('reports/addDailyReport', async (report: DailyReport) => {
-    await db.dailyReports.add(report);
-    return report;
+    return await api.post<DailyReport>('/reports/daily', report);
 });
 
 const reportsSlice = createSlice({

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { MonthlyStatement } from '../../types';
-import { db } from '../../services/dbService';
-import { RootState } from '..';
+import { api } from '../../services/apiService';
+import type { RootState } from '..';
 
 interface MonthlyStatementsState {
   items: MonthlyStatement[];
@@ -14,18 +14,16 @@ const initialState: MonthlyStatementsState = {
 };
 
 export const fetchMonthlyStatements = createAsyncThunk('monthlyStatements/fetch', async () => {
-  return await db.monthlyStatements.toArray();
+  return await api.get<MonthlyStatement[]>('/monthly-statements');
 });
 
+// Adding statements is now a server-side cron job. This might be used for manual generation.
 export const addMonthlyStatements = createAsyncThunk('monthlyStatements/add', async (statements: MonthlyStatement[]) => {
-    await db.monthlyStatements.bulkAdd(statements);
-    // Return all statements from DB to ensure consistency
-    return await db.monthlyStatements.toArray();
+    return await api.post<MonthlyStatement[]>('/monthly-statements', statements);
 });
 
 export const updateMonthlyStatement = createAsyncThunk('monthlyStatements/update', async (statement: MonthlyStatement) => {
-    await db.monthlyStatements.put(statement);
-    return await db.monthlyStatements.toArray();
+    return await api.put<MonthlyStatement[]>(`/monthly-statements/${statement.id}`, statement);
 });
 
 const monthlyStatementsSlice = createSlice({
@@ -42,9 +40,11 @@ const monthlyStatementsSlice = createSlice({
         state.status = 'succeeded';
       })
       .addCase(addMonthlyStatements.fulfilled, (state, action: PayloadAction<MonthlyStatement[]>) => {
+        // Assuming API returns the full list
         state.items = action.payload;
       })
       .addCase(updateMonthlyStatement.fulfilled, (state, action: PayloadAction<MonthlyStatement[]>) => {
+        // Assuming API returns the full list
         state.items = action.payload;
       });
   },

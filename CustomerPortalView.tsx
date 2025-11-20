@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { logout, selectUser, updateCustomerPassword } from './store/slices/authSlice';
+// FIX: Replaced non-existent `updateCustomerPassword` with the correct `updatePassword` thunk.
+import { logout, selectUser, updatePassword } from './store/slices/authSlice';
 import { Product, CartItem, Transaction, ProductRequest, ProductSuggestion, MonthlyStatement, Customer, GiftCard } from './types';
 import { ProductGrid } from './components/ProductGrid';
 import { saveTransaction } from './store/slices/transactionsSlice';
@@ -395,8 +396,8 @@ const ProfileTab: React.FC = () => {
             dispatch(addNotification({ type: 'error', message: 'New passwords do not match.' }));
             return;
         }
-        dispatch(updateCustomerPassword({
-            customerId: customer.id,
+        // FIX: Dispatched the correct `updatePassword` action with the right payload.
+        dispatch(updatePassword({
             currentPassword: passwordState.currentPassword,
             newPassword: passwordState.newPassword
         })).unwrap().then(() => {

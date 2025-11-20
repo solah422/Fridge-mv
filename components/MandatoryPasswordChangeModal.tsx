@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppDispatch } from '../store/hooks';
-import { forceFinancePasswordUpdate } from '../store/slices/authSlice';
+// FIX: Replaced non-existent `forceFinancePasswordUpdate` with the correct `updatePassword` thunk.
+import { updatePassword } from '../store/slices/authSlice';
 
 interface MandatoryPasswordChangeModalProps {
   onSuccess: () => void;
@@ -28,7 +29,8 @@ export const MandatoryPasswordChangeModal: React.FC<MandatoryPasswordChangeModal
 
         setIsLoading(true);
         // The old password is now 'test' by default for the first login
-        dispatch(forceFinancePasswordUpdate({ currentPassword: 'test', newPassword }))
+        // FIX: Dispatched the correct `updatePassword` action.
+        dispatch(updatePassword({ currentPassword: 'test', newPassword }))
             .unwrap()
             .then(() => {
                 onSuccess();

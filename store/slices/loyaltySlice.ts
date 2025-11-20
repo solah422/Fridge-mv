@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { LoyaltySettings } from '../../types';
-import { db } from '../../services/dbService';
+import { api } from '../../services/apiService';
 
 interface LoyaltyState {
   loyaltySettings: LoyaltySettings;
@@ -13,13 +13,13 @@ const initialState: LoyaltyState = {
 };
 
 export const fetchLoyaltySettings = createAsyncThunk('loyalty/fetchSettings', async () => {
-    const setting = await db.appSettings.get('loyaltySettings');
-    return setting?.value as LoyaltySettings;
+    const response = await api.get<{ value: LoyaltySettings }>('/settings/loyalty');
+    return response.value;
 });
 
 export const saveLoyaltySettings = createAsyncThunk('loyalty/saveSettings', async (settings: LoyaltySettings) => {
-    await db.appSettings.put({ key: 'loyaltySettings', value: settings });
-    return settings;
+    const response = await api.post<{ value: LoyaltySettings }>('/settings/loyalty', settings);
+    return response.value;
 });
 
 const loyaltySlice = createSlice({
