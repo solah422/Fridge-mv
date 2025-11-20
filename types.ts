@@ -30,6 +30,7 @@ export interface Customer {
   creditBlocked?: boolean;
   notifications?: string[];
   groupId?: number;
+  dashboardAccess?: 'delivery' | 'in-house'; // New field for dashboard type
 }
 
 export interface Product {
@@ -89,7 +90,7 @@ export interface Transaction {
   discountAmount: number;
   total: number;
   date: string;
-  paymentStatus: 'paid' | 'unpaid';
+  paymentStatus: 'paid' | 'unpaid' | 'review'; // Added 'review' for uploaded receipts
   orderStatus: 'Pending' | 'Out for Delivery' | 'Delivered';
   paymentMethod?: 'cash' | 'card' | 'transfer' | 'gift_card' | 'multiple' | 'unpaid';
   giftCardPayments?: GiftCardPayment[];

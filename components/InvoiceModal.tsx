@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Transaction } from '../types';
 import { ReturnItemsModal } from './ReturnItemsModal';
@@ -19,6 +20,139 @@ interface InvoiceModalProps {
   onProcessReturn: (transactionId: string, returnedItems: { itemId: number; quantity: number; reason: string }[], issueStoreCredit: boolean) => void;
 }
 
+export const InvoiceDocument: React.FC<{ invoice: Transaction; companyLogo: string | null }> = ({ invoice, companyLogo }) => {
+    return (
+        <>
+            {/* Header */}
+            <header className="flex justify-between items-start pb-6">
+                <div>
+                    {companyLogo ? (
+                        <img src={companyLogo} alt="Company Logo" className="max-h-16 mb-4" />
+                    ) : (
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Fridge MV</h2>
+                    )}
+                    <h1 className="text-4xl font-bold text-gray-900 uppercase tracking-wider">Invoice</h1>
+                    <p className="text-gray-500 mt-2">Invoice # {invoice.id}</p>
+                    <p className="text-gray-500">Date: {new Date(invoice.date).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                    <dl className="space-y-1 text-sm">
+                        <div className="flex justify-end items-baseline">
+                            <dt className="font-semibold text-cyan-600 w-20">Invoice To</dt>
+                            <dd className="text-gray-800 font-medium">{invoice.customer.name}</dd>
+                        </div>
+                        <div className="flex justify-end items-baseline">
+                            <dt className="font-semibold text-cyan-600 w-20">Address</dt>
+                            <dd className="text-gray-500">{invoice.customer.address || 'N/A'}</dd>
+                        </div>
+                        <div className="flex justify-end items-baseline">
+                            <dt className="font-semibold text-cyan-600 w-20">Email</dt>
+                            <dd className="text-gray-500">{invoice.customer.email || 'N/A'}</dd>
+                        </div>
+                        <div className="flex justify-end items-baseline">
+                            <dt className="font-semibold text-cyan-600 w-20">Phone</dt>
+                            <dd className="text-gray-500">{invoice.customer.phone || 'N/A'}</dd>
+                        </div>
+                        <div className="flex justify-end items-baseline">
+                            <dt className="font-semibold text-cyan-600 w-20">Id</dt>
+                            <dd className="text-gray-500">{invoice.customer.redboxId || 'N/A'}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </header>
+
+            {/* Items Table */}
+            <section className="mt-8">
+                <div className="w-full flex rounded-t-lg overflow-hidden text-sm font-semibold uppercase tracking-wider text-white">
+                    <div className="w-8/12 bg-slate-800 p-3 flex">
+                        <span className="w-10">SL.</span>
+                        <span>Item Description</span>
+                    </div>
+                    <div className="w-4/12 bg-blue-500 p-3 flex justify-between rounded-tr-lg">
+                        <span className="flex-1 text-right">Price</span>
+                        <span className="flex-1 text-right">Quantity</span>
+                        <span className="flex-1 text-right">Total</span>
+                    </div>
+                </div>
+                <div className="text-sm border-l border-r border-b border-gray-200 rounded-b-lg">
+                    {invoice.items.map((item, index) => (
+                        <div key={item.id} className={`flex items-start border-b border-gray-200 last:border-0 ${index % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                            <div className="w-8/12 p-3 flex">
+                                <span className="w-10 text-gray-500">{index + 1}.</span>
+                                <div>
+                                    <p className="font-medium text-gray-800">{item.name}</p>
+                                    <p className="text-xs text-gray-500">Standard product description.</p>
+                                </div>
+                            </div>
+                            <div className="w-4/12 p-3 flex justify-between items-start">
+                                <span className="flex-1 text-right text-gray-600">MVR {item.price.toFixed(2)}</span>
+                                <span className="flex-1 text-right text-gray-600">{item.quantity}</span>
+                                <span className="flex-1 text-right font-medium text-gray-800">MVR {(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* Footer */}
+            <section className="mt-8 flex justify-between items-end">
+                <div className="text-sm text-gray-600 max-w-md">
+                    {invoice.paymentStatus === 'unpaid' ? (
+                        <>
+                            <h5 className="font-bold text-gray-800 mb-2">Payment Instructions</h5>
+                            <p className="text-xs">Please settle the due amount to the following bank account:</p>
+                            <div className="font-mono text-xs mt-2 space-y-0.5 bg-gray-50 p-2 rounded border">
+                                <p><strong>Account Name:</strong> Ahmed Afrah</p>
+                                <p><strong>Account Number:</strong> MVR 7730000599889</p>
+                                <p><strong>Bank Name:</strong> BANK OF MALDIVES PLC</p>
+                            </div>
+                            <p className="text-xs mt-2">Either Viber/Telegram: 9630080 the Receipt or Upload thru Customer Portal</p>
+                        </>
+                    ) : (
+                        invoice.paymentMethod &&
+                        <div className="mt-6">
+                            <h5 className="font-bold text-cyan-600 mb-1">Payment Method</h5>
+                            <p className="capitalize">{invoice.paymentMethod.replace('_', ' ')}</p>
+                        </div>
+                    )}
+                    <p className="font-bold text-gray-800 mt-4">THANK YOU FOR YOUR BUSINESS</p>
+                </div>
+
+                <div className="w-full max-w-xs space-y-2 text-sm">
+                    <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>MVR {invoice.subtotal.toFixed(2)}</span></div>
+                    {invoice.discountAmount > 0 && <div className="flex justify-between text-gray-600"><span>Discount ({invoice.promotionCode || 'Manual'})</span><span>- MVR {invoice.discountAmount.toFixed(2)}</span></div>}
+                    <div className="flex justify-between text-gray-600"><span>Taxes</span><span>0.00%</span></div>
+                    <div className="flex justify-between font-bold text-xl text-blue-500 border-t-2 border-blue-500 pt-2 mt-2">
+                        <span>Total</span>
+                        <span>MVR {invoice.total.toFixed(2)}</span>
+                    </div>
+
+                    <div className="mt-20 text-center">
+                        <p className="text-gray-800">_________________________</p>
+                        <p className="text-gray-500 mt-1">Company signature</p>
+                    </div>
+                </div>
+            </section>
+
+            {/* Bottom contact bar */}
+            <footer className="mt-16 pt-6 border-t-2 border-gray-200 text-xs text-gray-500 flex justify-around">
+                <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+                    <span>7322277</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+                    <span>zahuwaan@redbox.mv</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+                    <span>G. Vaffushi, Malé</span>
+                </div>
+            </footer>
+        </>
+    );
+}
+
 export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, onClose, onUpdateTransaction, onProcessReturn }) => {
   const companyLogo = useAppSelector(selectCompanyLogo);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
@@ -38,17 +172,26 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, onClose, on
   const handleDownloadPdf = async () => {
     setPdfStatus('generating');
     const { jsPDF } = window.jspdf;
-    const sourceElement = document.getElementById('printable-area');
+    // Use the hidden, fixed-width element for PDF generation to ensure stable formatting
+    const sourceElement = document.getElementById('invoice-pdf-hidden');
     if (!sourceElement) { setPdfStatus('idle'); return; }
 
-    const canvas = await window.html2canvas(sourceElement, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`Invoice-${invoice.id}.pdf`);
-    setPdfStatus('idle');
+    // Wait a brief moment to ensure the hidden div is rendered
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    try {
+        const canvas = await window.html2canvas(sourceElement, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Invoice-${invoice.id}.pdf`);
+    } catch (error) {
+        console.error("PDF Generation failed", error);
+    } finally {
+        setPdfStatus('idle');
+    }
   };
   
   const handleProcessReturnFromModal = (
@@ -73,136 +216,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, onClose, on
           </div>
           
           <div className="overflow-y-auto">
-            <div id="printable-area" className="bg-white text-gray-800 font-sans p-10 pdf-render">
-                {/* Header */}
-                <header className="flex justify-between items-start pb-6">
-                    <div>
-                        {companyLogo ? (
-                          <img src={companyLogo} alt="Company Logo" className="max-h-16 mb-4" />
-                        ) : (
-                          <h2 className="text-2xl font-bold text-gray-800 mb-4">Fridge MV</h2>
-                        )}
-                        <h1 className="text-4xl font-bold text-gray-900 uppercase tracking-wider">Invoice</h1>
-                        <p className="text-gray-500 mt-2">Invoice # {invoice.id}</p>
-                        <p className="text-gray-500">Date: {new Date(invoice.date).toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right">
-                        <dl className="space-y-1 text-sm">
-                            <div className="flex justify-end items-baseline">
-                                <dt className="font-semibold text-cyan-600 w-16">Invoice To</dt>
-                                <dd className="text-gray-800 font-medium">{invoice.customer.name}</dd>
-                            </div>
-                            <div className="flex justify-end items-baseline">
-                                <dt className="font-semibold text-cyan-600 w-16">Address</dt>
-                                <dd className="text-gray-500">{invoice.customer.address || 'N/A'}</dd>
-                            </div>
-                            <div className="flex justify-end items-baseline">
-                                <dt className="font-semibold text-cyan-600 w-16">Email</dt>
-                                <dd className="text-gray-500">{invoice.customer.email || 'N/A'}</dd>
-                            </div>
-                            <div className="flex justify-end items-baseline">
-                                <dt className="font-semibold text-cyan-600 w-16">Phone</dt>
-                                <dd className="text-gray-500">{invoice.customer.phone || 'N/A'}</dd>
-                            </div>
-                            <div className="flex justify-end items-baseline">
-                                <dt className="font-semibold text-cyan-600 w-16">Id</dt>
-                                <dd className="text-gray-500">{invoice.customer.redboxId || 'N/A'}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </header>
-
-                {/* Items Table */}
-                <section className="mt-8">
-                    <div className="w-full flex rounded-t-lg overflow-hidden text-sm font-semibold uppercase tracking-wider text-white">
-                        <div className="w-8/12 bg-slate-800 p-3 flex">
-                            <span className="w-10">SL.</span>
-                            <span>Item Description</span>
-                        </div>
-                        <div className="w-4/12 bg-blue-500 p-3 flex justify-between rounded-tr-lg">
-                            <span className="flex-1 text-right">Price</span>
-                            <span className="flex-1 text-right">Quantity</span>
-                            <span className="flex-1 text-right">Total</span>
-                        </div>
-                    </div>
-                    <div className="text-sm border-l border-r border-b border-gray-200 rounded-b-lg">
-                        {invoice.items.map((item, index) => (
-                            <div key={item.id} className={`flex items-start border-b border-gray-200 last:border-0 ${index % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}>
-                                <div className="w-8/12 p-3 flex">
-                                    <span className="w-10 text-gray-500">{index + 1}.</span>
-                                    <div>
-                                        <p className="font-medium text-gray-800">{item.name}</p>
-                                        <p className="text-xs text-gray-500">Standard product description.</p>
-                                    </div>
-                                </div>
-                                <div className="w-4/12 p-3 flex justify-between items-start">
-                                    <span className="flex-1 text-right text-gray-600">MVR {item.price.toFixed(2)}</span>
-                                    <span className="flex-1 text-right text-gray-600">{item.quantity}</span>
-                                    <span className="flex-1 text-right font-medium text-gray-800">MVR {(item.price * item.quantity).toFixed(2)}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Footer */}
-                <section className="mt-8 flex justify-between items-end">
-                    <div className="text-sm text-gray-600 max-w-md">
-                        {invoice.paymentStatus === 'unpaid' ? (
-                            <>
-                                <h5 className="font-bold text-gray-800 mb-2">Payment Instructions</h5>
-                                <p className="text-xs">Please settle the due amount to the following bank account:</p>
-                                <div className="font-mono text-xs mt-2 space-y-0.5 bg-gray-50 p-2 rounded border">
-                                    <p><strong>Account Name:</strong> Ahmed Afrah</p>
-                                    <p><strong>Account Number:</strong> MVR 7730000599889</p>
-                                    <p><strong>Bank Name:</strong> BANK OF MALDIVES PLC</p>
-                                </div>
-                                <p className="text-xs mt-2">Either Viber/Telegram: 9630080 the Receipt or Upload thru Customer Portal</p>
-                            </>
-                        ) : (
-                            invoice.paymentMethod &&
-                            <div className="mt-6">
-                                <h5 className="font-bold text-cyan-600 mb-1">Payment Method</h5>
-                                <p className="capitalize">{invoice.paymentMethod.replace('_', ' ')}</p>
-                            </div>
-                        )}
-                        <p className="font-bold text-gray-800 mt-4">THANK YOU FOR YOUR BUSINESS</p>
-                    </div>
-
-                    <div className="w-full max-w-xs space-y-2 text-sm">
-                        <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>MVR {invoice.subtotal.toFixed(2)}</span></div>
-                        {invoice.discountAmount > 0 && <div className="flex justify-between text-gray-600"><span>Discount ({invoice.promotionCode || 'Manual'})</span><span>- MVR {invoice.discountAmount.toFixed(2)}</span></div>}
-                        <div className="flex justify-between text-gray-600"><span>Taxes</span><span>0.00%</span></div>
-                        <div className="flex justify-between font-bold text-xl text-blue-500 border-t-2 border-blue-500 pt-2 mt-2">
-                            <span>Total</span>
-                            <span>MVR {invoice.total.toFixed(2)}</span>
-                        </div>
-                        
-                        <div className="mt-20 text-center">
-                            <p className="text-gray-800">_________________________</p>
-                            <p className="text-gray-500 mt-1">Company signature</p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Bottom contact bar */}
-                <footer className="mt-16 pt-6 border-t-2 border-gray-200 text-xs text-gray-500 flex justify-around">
-                    <div className="flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
-                        <span>7322277</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
-                        <span>zahuwaan@redbox.mv</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
-                        <span>G. Vaffushi, Malé</span>
-                    </div>
-                </footer>
+            {/* Visible Responsive Invoice */}
+            <div className="bg-white text-gray-800 font-sans p-10 pdf-render">
+                <InvoiceDocument invoice={invoice} companyLogo={companyLogo} />
             </div>
           </div>
-
 
           <div className="p-4 bg-[rgb(var(--color-bg-subtle))] border-t flex flex-wrap gap-2 justify-end items-center">
              <div className="mr-auto">
@@ -213,19 +231,183 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, onClose, on
                 <option value="Delivered">Delivered</option>
               </select>
             </div>
-            <button onClick={handleDownloadPdf} disabled={pdfStatus === 'generating'} className="px-4 py-2 bg-[rgb(var(--color-bg-subtle))] rounded-md disabled:opacity-50">{pdfStatus === 'generating' ? '...' : 'PDF'}</button>
-            {canReturnItems && <button onClick={() => setIsReturnModalOpen(true)} className="px-4 py-2 bg-yellow-500 text-white rounded-md">Return Items</button>}
+            <button onClick={handleDownloadPdf} disabled={pdfStatus === 'generating'} className="px-4 py-2 bg-[rgb(var(--color-bg-subtle))] border border-[rgb(var(--color-border))] rounded-md disabled:opacity-50 hover:bg-[rgb(var(--color-border-subtle))] transition">
+                {pdfStatus === 'generating' ? 'Generating...' : 'Download PDF'}
+            </button>
+            {canReturnItems && <button onClick={() => setIsReturnModalOpen(true)} className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition">Return Items</button>}
             {invoice.paymentStatus === 'unpaid' && (
               <>
-                <button onClick={() => { setSelectedPaymentMethod('cash'); setIsPaymentModalOpen(true); }} className="px-4 py-2 bg-green-600 text-white rounded-md">Paid (Cash)</button>
-                <button onClick={() => { setSelectedPaymentMethod('transfer'); setIsPaymentModalOpen(true); }} className="px-4 py-2 bg-blue-600 text-white rounded-md">Paid (Transfer)</button>
+                <button onClick={() => { setSelectedPaymentMethod('cash'); setIsPaymentModalOpen(true); }} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Paid (Cash)</button>
+                <button onClick={() => { setSelectedPaymentMethod('transfer'); setIsPaymentModalOpen(true); }} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Paid (Transfer)</button>
               </>
             )}
           </div>
         </div>
       </div>
+
+       {/* Hidden Fixed-Width Invoice for PDF Generation */}
+       <div id="invoice-pdf-hidden" style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '794px' }} className="bg-white text-gray-800 font-sans p-10 pdf-render">
+           <InvoiceDocument invoice={invoice} companyLogo={companyLogo} />
+       </div>
+
        {isReturnModalOpen && <ReturnItemsModal isOpen={isReturnModalOpen} onClose={() => setIsReturnModalOpen(false)} transaction={invoice} onProcessReturn={handleProcessReturnFromModal}/>}
        {isPaymentModalOpen && selectedPaymentMethod && <PaymentDetailsModal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} transaction={invoice} paymentMethod={selectedPaymentMethod} onUpdateTransaction={onUpdateTransaction} />}
     </>
   );
+};
+
+// --- Summary Invoice Modal Feature ---
+
+interface SummaryInvoiceModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  transactions: Transaction[];
+}
+
+export const SummaryInvoiceModal: React.FC<SummaryInvoiceModalProps> = ({ isOpen, onClose, transactions }) => {
+    const companyLogo = useAppSelector(selectCompanyLogo);
+    const [pdfStatus, setPdfStatus] = useState<'idle' | 'generating'>('idle');
+
+    const customer = transactions.length > 0 ? transactions[0].customer : null;
+    const isSingleCustomer = transactions.every(t => t.customerId === customer?.id);
+    
+    const totalAmount = transactions.reduce((sum, t) => sum + t.total, 0);
+    const sortedTransactions = [...transactions].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const dateRange = sortedTransactions.length > 0 
+        ? `${new Date(sortedTransactions[0].date).toLocaleDateString()} - ${new Date(sortedTransactions[sortedTransactions.length - 1].date).toLocaleDateString()}`
+        : 'N/A';
+
+    const handleDownloadPdf = async () => {
+        setPdfStatus('generating');
+        const { jsPDF } = window.jspdf;
+        const sourceElement = document.getElementById('summary-invoice-pdf-hidden');
+        if (!sourceElement) { setPdfStatus('idle'); return; }
+    
+        await new Promise(resolve => setTimeout(resolve, 50));
+    
+        try {
+            const canvas = await window.html2canvas(sourceElement, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Summary-Invoice-${new Date().toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+            console.error("PDF Generation failed", error);
+        } finally {
+            setPdfStatus('idle');
+        }
+    };
+
+    if (!isOpen) return null;
+
+    const SummaryDocument = () => (
+        <div className="bg-white text-gray-800 font-sans p-10 pdf-render">
+            <header className="flex justify-between items-start pb-6">
+                <div>
+                    {companyLogo ? (
+                        <img src={companyLogo} alt="Company Logo" className="max-h-16 mb-4" />
+                    ) : (
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Fridge MV</h2>
+                    )}
+                    <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-wider">Summary Invoice</h1>
+                    <p className="text-gray-500 mt-2">Date: {new Date().toLocaleDateString()}</p>
+                    <p className="text-gray-500">Period: {dateRange}</p>
+                </div>
+                <div className="text-right">
+                    <dl className="space-y-1 text-sm">
+                        <div className="flex justify-end items-baseline">
+                            <dt className="font-semibold text-cyan-600 w-20">Invoice To</dt>
+                            <dd className="text-gray-800 font-medium">{isSingleCustomer && customer ? customer.name : 'Multiple Customers'}</dd>
+                        </div>
+                         {isSingleCustomer && customer && (
+                             <>
+                                <div className="flex justify-end items-baseline">
+                                    <dt className="font-semibold text-cyan-600 w-20">Address</dt>
+                                    <dd className="text-gray-500">{customer.address || 'N/A'}</dd>
+                                </div>
+                                <div className="flex justify-end items-baseline">
+                                    <dt className="font-semibold text-cyan-600 w-20">Phone</dt>
+                                    <dd className="text-gray-500">{customer.phone || 'N/A'}</dd>
+                                </div>
+                            </>
+                        )}
+                    </dl>
+                </div>
+            </header>
+
+            <section className="mt-8">
+                <div className="w-full flex rounded-t-lg overflow-hidden text-sm font-semibold uppercase tracking-wider text-white">
+                    <div className="w-4/12 bg-slate-800 p-3">Date</div>
+                    <div className="w-4/12 bg-slate-800 p-3">Invoice # / Details</div>
+                    <div className="w-4/12 bg-blue-500 p-3 text-right">Amount</div>
+                </div>
+                <div className="text-sm border-l border-r border-b border-gray-200 rounded-b-lg">
+                    {sortedTransactions.map((tx, index) => (
+                        <div key={tx.id} className={`flex items-center border-b border-gray-200 last:border-0 ${index % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                            <div className="w-4/12 p-3 text-gray-600">{new Date(tx.date).toLocaleDateString()}</div>
+                            <div className="w-4/12 p-3 text-gray-800 font-medium">
+                                {tx.id}
+                                {!isSingleCustomer && <span className="text-xs text-gray-500 block">({tx.customer.name})</span>}
+                            </div>
+                            <div className="w-4/12 p-3 text-right font-medium text-gray-800">MVR {tx.total.toFixed(2)}</div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section className="mt-8 flex justify-between items-end">
+                <div className="text-sm text-gray-600 max-w-md">
+                    <h5 className="font-bold text-gray-800 mb-2">Payment Instructions</h5>
+                    <p className="text-xs">Please settle the total amount to the following account:</p>
+                    <div className="font-mono text-xs mt-2 space-y-0.5 bg-gray-50 p-2 rounded border">
+                         <p><strong>Account Name:</strong> Ahmed Afrah</p>
+                         <p><strong>Account Number:</strong> MVR 7730000599889</p>
+                         <p><strong>Bank Name:</strong> BANK OF MALDIVES PLC</p>
+                    </div>
+                </div>
+
+                <div className="w-full max-w-xs space-y-2 text-sm">
+                    <div className="flex justify-between font-bold text-xl text-blue-500 border-t-2 border-blue-500 pt-2 mt-2">
+                        <span>Total Due</span>
+                        <span>MVR {totalAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="mt-10 text-center">
+                         <p className="text-gray-800">_________________________</p>
+                         <p className="text-gray-500 mt-1">Authorized Signature</p>
+                    </div>
+                </div>
+            </section>
+            
+            <footer className="mt-16 pt-6 border-t-2 border-gray-200 text-xs text-gray-500 flex justify-around">
+                 <span>Fridge MV - Generated Summary</span>
+            </footer>
+        </div>
+    );
+
+    return (
+        <>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-40 p-4 sm:p-6 lg:p-8">
+                <div className="bg-[rgb(var(--color-bg-card))] rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+                    <div className="p-4 border-b border-[rgb(var(--color-border-subtle))] flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-[rgb(var(--color-text-base))]">Summary Invoice (Multi-Day)</h3>
+                        <button onClick={onClose} className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-base))] text-3xl">&times;</button>
+                    </div>
+                    <div className="overflow-y-auto">
+                         <SummaryDocument />
+                    </div>
+                    <div className="p-4 bg-[rgb(var(--color-bg-subtle))] border-t flex justify-end gap-2">
+                        <button onClick={onClose} className="px-4 py-2 bg-[rgb(var(--color-border-subtle))] rounded-md hover:bg-[rgb(var(--color-border))] transition">Close</button>
+                        <button onClick={handleDownloadPdf} disabled={pdfStatus === 'generating'} className="px-4 py-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] rounded-md disabled:opacity-50 hover:bg-[rgb(var(--color-primary-hover))] transition">
+                             {pdfStatus === 'generating' ? 'Generating...' : 'Download PDF'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+             <div id="summary-invoice-pdf-hidden" style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '794px' }} className="bg-white text-gray-800 font-sans p-10 pdf-render">
+                <SummaryDocument />
+            </div>
+        </>
+    );
 };

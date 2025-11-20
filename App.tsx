@@ -31,7 +31,7 @@ import { CustomersView } from './components/CustomersView';
 import { SettingsView } from './components/SettingsView';
 import { DashboardView } from './components/DashboardView';
 import { LoginView } from './components/LoginView';
-import { CustomerPortalView } from './CustomerPortalView';
+import { CustomerPortalView } from './components/CustomerPortalView';
 import { RequestsView } from './components/RequestsView';
 import { ToastContainer } from './components/ToastContainer';
 import { FinanceLayout } from './components/FinanceLayout';
@@ -198,8 +198,11 @@ const App: React.FC = () => {
   // Show welcome panel on login
   useEffect(() => {
     if (user) {
-      const welcomeSeen = sessionStorage.getItem(`welcome_seen_${APP_VERSION}`);
-      if (!welcomeSeen) {
+      const suppressed = localStorage.getItem(`welcome_suppressed_${APP_VERSION}`);
+      const sessionSeen = sessionStorage.getItem(`welcome_seen_${APP_VERSION}`);
+      
+      // Only show if NOT suppressed permanently AND NOT seen in this session
+      if (!suppressed && !sessionSeen) {
         dispatch(setShowWelcomePanel(true));
         sessionStorage.setItem(`welcome_seen_${APP_VERSION}`, 'true');
       }

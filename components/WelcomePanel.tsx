@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { changelogData } from '../data/changelogData';
 
 interface WelcomePanelProps {
@@ -7,6 +7,15 @@ interface WelcomePanelProps {
 }
 
 export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onClose, version }) => {
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  const handleClose = () => {
+    if (dontShowAgain) {
+      localStorage.setItem(`welcome_suppressed_${version}`, 'true');
+    }
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
       <div className="bg-[rgb(var(--color-bg-card))] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -26,8 +35,17 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onClose, version }) 
             </div>
           ))}
         </div>
-        <div className="p-4 bg-[rgb(var(--color-bg-subtle))] border-t border-[rgb(var(--color-border-subtle))] flex justify-end">
-          <button onClick={onClose} className="px-6 py-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] font-semibold rounded-md hover:bg-[rgb(var(--color-primary-hover))] transition">
+        <div className="p-4 bg-[rgb(var(--color-bg-subtle))] border-t border-[rgb(var(--color-border-subtle))] flex flex-col sm:flex-row justify-between items-center gap-4">
+           <label className="flex items-center gap-2 cursor-pointer text-sm text-[rgb(var(--color-text-muted))]">
+              <input 
+                type="checkbox" 
+                checked={dontShowAgain} 
+                onChange={(e) => setDontShowAgain(e.target.checked)} 
+                className="rounded border-[rgb(var(--color-border))] text-[rgb(var(--color-primary))] focus:ring-[rgb(var(--color-primary-focus-ring))]"
+              />
+              Don't show again until next update
+          </label>
+          <button onClick={handleClose} className="px-6 py-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] font-semibold rounded-md hover:bg-[rgb(var(--color-primary-hover))] transition w-full sm:w-auto">
             Continue
           </button>
         </div>

@@ -3,6 +3,7 @@ import { Credential } from '../../types';
 import { api } from '../../services/apiService';
 import type { RootState } from '..';
 import { generateActivationCode } from './customersSlice'; 
+import { addNotification } from './notificationsSlice';
 
 interface CredentialsState {
   items: Credential[];
@@ -19,6 +20,21 @@ export const fetchCredentials = createAsyncThunk('credentials/fetchCredentials',
   const response = await api.get<Credential[]>('/credentials');
   return response;
 });
+
+export const updateCredentialRole = createAsyncThunk(
+    'credentials/updateRole',
+    async ({ redboxId, role }: { redboxId: number; role: Credential['role'] }, { dispatch, rejectWithValue }) => {
+        try {
+            // Assuming the backend has an endpoint to update roles specifically
+            // or a general credential update endpoint. Using a specific one for clarity.
+            const response = await api.put<Credential>('/credentials/role', { redboxId, role });
+            dispatch(addNotification({ type: 'success', message: `User permission updated to: ${role.toUpperCase()}` }));
+            return response;
+        } catch (error: any) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
 
 const credentialsSlice = createSlice({
   name: 'credentials',
@@ -43,6 +59,16 @@ const credentialsSlice = createSlice({
         if (index !== -1) {
             state.items[index].oneTimeCode = code;
         }
+      })
+      .addCase(updateCredentialRole.fulfilled, (state, action: PayloadAction<Credential>) => {
+          const updatedCred = action.payload;
+          const index = state.items.findIndex(c => c.redboxId === updatedCred.redboxId);
+          if (index !== -1) {
+              state.items[index] = updatedCred;
+          } else {
+              // If for some reason it wasn't in the list (shouldn't happen if fetched), add it
+              state.items.push(updatedCred);
+          }
       });
   },
 });

@@ -32,7 +32,7 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
     const [form, setForm] = useState({
         name: '', email: '', phone: '', telegramId: '', redboxId: '',
         address: '', notes: '', tags: '', password: '', maximumCreditLimit: defaultCreditLimit.toString(),
-        groupId: '',
+        groupId: '', dashboardAccess: 'delivery'
     });
     const [error, setError] = useState('');
     const [currentCredential, setCurrentCredential] = useState<Credential | null>(null);
@@ -51,6 +51,7 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
             password: '',
             maximumCreditLimit: customerToEdit?.maximumCreditLimit?.toString() || defaultCreditLimit.toString(),
             groupId: customerToEdit?.groupId?.toString() || '',
+            dashboardAccess: customerToEdit?.dashboardAccess || 'delivery',
         });
 
         if (customerToEdit && customerToEdit.redboxId) {
@@ -77,9 +78,7 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
             dispatch(generateActivationCode(customerToEdit.redboxId))
                 .unwrap()
                 .then(payload => {
-                    // Instantly update the UI field
                     setCurrentCredential(prev => prev ? { ...prev, oneTimeCode: payload.code } : null);
-
                     dispatch(addNotification({
                         type: 'success',
                         message: `New code for ${customerToEdit.name}: ${payload.code}`,
@@ -125,6 +124,7 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
             redboxId: numericRedboxId,
             maximumCreditLimit: parseInt(form.maximumCreditLimit, 10) || defaultCreditLimit,
             groupId: form.groupId ? parseInt(form.groupId, 10) : undefined,
+            dashboardAccess: form.dashboardAccess as 'delivery' | 'in-house',
             ...(form.password.trim() && { password: form.password.trim() }),
             ...(!isEditing && { loyaltyPoints: 0, createdAt: new Date().toISOString(), creditBlocked: false }),
             ...(isEditing && { loyaltyPoints: customerToEdit.loyaltyPoints, createdAt: customerToEdit.createdAt, creditBlocked: customerToEdit.creditBlocked })
@@ -164,14 +164,23 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
                     <section className="border-t border-[rgb(var(--color-border-subtle))] pt-6">
                         <h4 className="font-semibold text-[rgb(var(--color-text-muted))] mb-3">Additional Details</h4>
                         <div className="space-y-4">
-                            <InputField label="Address" name="address" value={form.address} onChange={handleChange} />
-                            <div>
-                                <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">Customer Group</label>
-                                <select name="groupId" value={form.groupId} onChange={handleChange} className="w-full p-2 border border-[rgb(var(--color-border))] rounded bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]">
-                                    <option value="">None</option>
-                                    {customerGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                                </select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">Customer Group</label>
+                                    <select name="groupId" value={form.groupId} onChange={handleChange} className="w-full p-2 border border-[rgb(var(--color-border))] rounded bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]">
+                                        <option value="">None</option>
+                                        {customerGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">Dashboard Type</label>
+                                    <select name="dashboardAccess" value={form.dashboardAccess} onChange={handleChange} className="w-full p-2 border border-[rgb(var(--color-border))] rounded bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]">
+                                        <option value="delivery">Delivery (Full Access)</option>
+                                        <option value="in-house">In-House (No Delivery)</option>
+                                    </select>
+                                </div>
                             </div>
+                            <InputField label="Address" name="address" value={form.address} onChange={handleChange} />
                              <div>
                                 <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">Notes</label>
                                 <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} className="w-full p-2 border border-[rgb(var(--color-border))] rounded bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]"></textarea>
@@ -191,7 +200,6 @@ export const ManageCustomersModal: React.FC<ManageCustomersModalProps> = ({ isOp
                                     <label className="block text-sm font-medium text-[rgb(var(--color-text-muted))] mb-1">One-Time Activation Code</label>
                                     <div className="flex items-center gap-2">
                                         <input
-                                            id="oneTimeCodeDisplay"
                                             type="text"
                                             value={currentCredential?.oneTimeCode || 'N/A'}
                                             readOnly

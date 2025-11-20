@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Product, Wholesaler, PurchaseOrder, InventoryEvent } from '../types';
 import { ProductModal } from './ProductModal';
@@ -156,15 +157,15 @@ export const InventoryView: React.FC<{
             <h3 className="text-xl font-bold">Products</h3>
             <div className="flex items-center gap-2">
                 <button onClick={() => setIsImportModalOpen(true)} className="px-4 py-2 bg-[rgb(var(--color-bg-subtle))] text-[rgb(var(--color-text-base))] rounded-md hover:bg-[rgb(var(--color-border-subtle))] transition">Import Products</button>
+                <button onClick={() => { setProductToEdit(null); setIsProductModalOpen(true); }} className="px-4 py-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] rounded-md hover:bg-[rgb(var(--color-primary-hover))] transition">Add Product</button>
                 <div className="relative">
-                    <button onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)} className="px-4 py-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] rounded-md hover:bg-[rgb(var(--color-primary-hover))] flex items-center">
-                        Add New
+                    <button onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)} className="px-4 py-2 bg-[rgb(var(--color-bg-subtle))] text-[rgb(var(--color-text-base))] rounded-md hover:bg-[rgb(var(--color-border-subtle))] flex items-center transition">
+                        More
                         <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     {isAddDropdownOpen && (
                         <div className="absolute right-0 mt-2 w-48 bg-[rgb(var(--color-bg-card))] rounded-md shadow-lg z-20 border border-[rgb(var(--color-border))]">
-                            <a href="#" onClick={(e) => { e.preventDefault(); setProductToEdit(null); setIsProductModalOpen(true); setIsAddDropdownOpen(false); }} className="block px-4 py-2 text-sm text-[rgb(var(--color-text-base))] hover:bg-[rgb(var(--color-bg-subtle))]">Standard Product</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); setProductToEdit(null); setIsBundleModalOpen(true); setIsAddDropdownOpen(false); }} className="block px-4 py-2 text-sm text-[rgb(var(--color-text-base))] hover:bg-[rgb(var(--color-bg-subtle))]">Product Bundle</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); setProductToEdit(null); setIsBundleModalOpen(true); setIsAddDropdownOpen(false); }} className="block px-4 py-2 text-sm text-[rgb(var(--color-text-base))] hover:bg-[rgb(var(--color-bg-subtle))]">Create Bundle</a>
                         </div>
                     )}
                 </div>
@@ -263,7 +264,12 @@ const ProductTable: React.FC<{ products: Product[], wholesalers: Wholesaler[], o
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">MVR {p.price.toFixed(2)}</td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{wholesalerMap.get(p.defaultWholesalerId ?? -1) || 'N/A'}</td>
                             <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <button onClick={() => onViewHistory(p)} className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-base))]">History</button>
+                                <button onClick={() => onViewHistory(p)} className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-base))] flex items-center inline-flex">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    History
+                                </button>
                                 <button
                                   onClick={() => onAdjustStock(p)}
                                   className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-base))] disabled:opacity-50 disabled:cursor-not-allowed"

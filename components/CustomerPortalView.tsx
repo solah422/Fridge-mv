@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { logout, selectUser } from '../store/slices/authSlice';
-import { Product, CartItem, Transaction, ProductRequest, ProductSuggestion, MonthlyStatement } from '../types';
+import { logout, selectUser, updatePassword } from '../store/slices/authSlice';
+import { Product, CartItem, Transaction, ProductRequest, ProductSuggestion, MonthlyStatement, Customer, GiftCard } from '../types';
 import { ProductGrid } from './ProductGrid';
 import { saveTransaction } from '../store/slices/transactionsSlice';
 import { ProductRequestModal } from './ProductRequestModal';
@@ -10,13 +10,29 @@ import { addNotification } from '../store/slices/notificationsSlice';
 import { CustomerLoyaltyView } from './CustomerLoyaltyView';
 import { selectAllMonthlyStatements } from '../store/slices/monthlyStatementsSlice';
 import { MonthlyStatementModal } from './MonthlyStatementModal';
+import { updateCustomers } from '../store/slices/customersSlice';
+import ThemeSwitcher from './ThemeSwitcher';
+import { AboutPanel } from './AboutPanel';
+import { Theme } from '../App';
+import { setUserTheme, selectActiveWallpaper, setUserWallpaper, selectActiveTheme } from '../store/slices/appSlice';
+import { MaterialYouSettings } from './MaterialYouSettings';
+import { WallpaperGallery } from './WallpaperGallery';
+import { CustomerGiftCardsPanel } from './CustomerGiftCardsPanel';
+import { ApplyGiftCardModal } from './ApplyGiftCardModal';
+
+type CustomerPortalTab = 'dashboard' | 'order' | 'history' | 'loyalty' | 'profile';
 
 const CustomerCart: React.FC<{
     cart: CartItem[], 
+    subtotal: number,
+    total: number,
+    giftCardDeduction: number,
+    appliedGiftCard: GiftCard | null,
     onUpdateQuantity: (id: number, qty: number) => void,
-    onPlaceOrder: () => void
-}> = ({ cart, onUpdateQuantity, onPlaceOrder }) => {
-    const subtotal = useMemo(() => cart.reduce((acc, item) => acc + item.price * item.quantity, 0), [cart]);
+    onPlaceOrder: () => void,
+    onApplyGiftCardClick: () => void,
+    onRemoveGiftCard: () => void,
+}> = ({ cart, subtotal, total, giftCardDeduction, appliedGiftCard, onUpdateQuantity, onPlaceOrder, onApplyGiftCardClick, onRemoveGiftCard }) => {
 
     return (
         <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
@@ -40,17 +56,40 @@ const CustomerCart: React.FC<{
                             </div>
                         ))}
                     </div>
-                    <div className="mt-4 pt-4 border-t">
-                        <div className="flex justify-between font-bold text-lg">
-                            <span>Total</span>
-                            <span>MVR {subtotal.toFixed(2)}</span>
+                    <div className="mt-4 pt-4 border-t border-[rgb(var(--color-border-subtle))]">
+                        <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                                <span>Subtotal</span>
+                                <span>MVR {subtotal.toFixed(2)}</span>
+                            </div>
+                            {appliedGiftCard && (
+                                <div className="flex justify-between text-green-600 dark:text-green-400">
+                                    <span>Gift Card ({appliedGiftCard.id.slice(-4)})</span>
+                                    <span>- MVR {giftCardDeduction.toFixed(2)}</span>
+                                </div>
+                            )}
                         </div>
-                        <button 
-                            onClick={onPlaceOrder} 
-                            className="mt-4 w-full bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] py-3 rounded-md font-semibold hover:bg-[rgb(var(--color-primary-hover))]"
-                        >
-                            Place Order
-                        </button>
+                        <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-[rgb(var(--color-border))]">
+                            <span>Total</span>
+                            <span>MVR {total.toFixed(2)}</span>
+                        </div>
+                         <div className="mt-4 space-y-2">
+                            {appliedGiftCard ? (
+                                <button onClick={onRemoveGiftCard} className="w-full border border-[rgb(var(--color-border))] py-2 rounded-md text-sm font-semibold hover:bg-[rgb(var(--color-bg-subtle))]">
+                                    Remove Gift Card
+                                </button>
+                            ) : (
+                                <button onClick={onApplyGiftCardClick} className="w-full border border-[rgb(var(--color-border))] py-2 rounded-md text-sm font-semibold hover:bg-[rgb(var(--color-bg-subtle))]">
+                                    Apply Gift Card
+                                </button>
+                            )}
+                            <button 
+                                onClick={onPlaceOrder} 
+                                className="w-full bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] py-3 rounded-md font-semibold hover:bg-[rgb(var(--color-primary-hover))]"
+                            >
+                                Place Order
+                            </button>
+                        </div>
                     </div>
                 </>
             )}
@@ -58,14 +97,14 @@ const CustomerCart: React.FC<{
     );
 };
 
-const OrderHistory: React.FC = () => {
+const HistoryTab: React.FC = () => {
     const user = useAppSelector(selectUser);
     const transactions = useAppSelector(state => state.transactions.items);
     const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
     const customerTransactions = useMemo(() => {
         return transactions
-            .filter(tx => tx.customer.id === user?.id)
+            .filter(tx => tx.customerId === user?.id)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [transactions, user]);
 
@@ -134,18 +173,33 @@ const OrderHistory: React.FC = () => {
     );
 };
 
-const CustomerDashboard: React.FC<{
+const DashboardTab: React.FC<{
     onOpenRequestModal: () => void;
     onOpenSuggestionModal: () => void;
-}> = ({ onOpenRequestModal, onOpenSuggestionModal }) => {
+    showRequests: boolean;
+}> = ({ onOpenRequestModal, onOpenSuggestionModal, showRequests }) => {
+    const dispatch = useAppDispatch();
     const user = useAppSelector(selectUser);
+    const allCustomers = useAppSelector(state => state.customers.items);
+    const customer = allCustomers.find(c => c.id === user?.id);
     const transactions = useAppSelector(state => state.transactions.items);
     const products = useAppSelector(state => state.products.items);
     const requests = useAppSelector(state => state.productRequests.items);
     const suggestions = useAppSelector(state => state.productSuggestions.items);
     const monthlyStatements = useAppSelector(selectAllMonthlyStatements);
+    const allGiftCards = useAppSelector(state => state.giftCards.items);
     
     const [viewingStatement, setViewingStatement] = useState<MonthlyStatement | null>(null);
+
+    const userGiftCards = useMemo(() => {
+        const now = new Date();
+        return allGiftCards.filter(gc => 
+            gc.customerId === user?.id && 
+            gc.isEnabled && 
+            gc.currentBalance > 0 && 
+            (!gc.expiryDate || new Date(gc.expiryDate) > now)
+        );
+    }, [allGiftCards, user]);
 
     const outstandingStatement = useMemo(() => {
         return monthlyStatements
@@ -161,7 +215,7 @@ const CustomerDashboard: React.FC<{
 
     const pendingOrder = useMemo(() => {
         return transactions
-            .filter(tx => tx.customer.id === user?.id && tx.orderStatus === 'Pending')
+            .filter(tx => tx.customerId === user?.id && tx.orderStatus === 'Pending')
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
     }, [transactions, user]);
     
@@ -181,6 +235,15 @@ const CustomerDashboard: React.FC<{
         .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), 
     [requests, suggestions, user]);
     
+    const handleDismissNotification = (index: number) => {
+        if (!customer) return;
+        const newNotifications = [...(customer.notifications || [])];
+        newNotifications.splice(index, 1);
+        const updatedCustomer: Customer = { ...customer, notifications: newNotifications };
+        const updatedCustomerList = allCustomers.map(c => c.id === customer.id ? updatedCustomer : c);
+        dispatch(updateCustomers(updatedCustomerList));
+    };
+
     const StatusBadge: React.FC<{ status: ProductRequest['status'] }> = ({ status }) => {
         const colorClasses = { pending: 'bg-yellow-100 text-yellow-800', approved: 'bg-green-100 text-green-800', denied: 'bg-red-100 text-red-800', contacted: 'bg-blue-100 text-blue-800' };
         return <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${colorClasses[status]}`}>{status}</span>;
@@ -188,74 +251,111 @@ const CustomerDashboard: React.FC<{
 
     return (
         <>
-        {overdueStatement && (
-             <div className="bg-red-100 dark:bg-red-900/50 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 rounded-lg shadow-md mb-6" role="alert">
-                <div className="flex items-start">
+        <div className="space-y-6">
+            {/* Notification Loop */}
+            {(customer?.notifications || []).map((notif, index) => (
+                 <div key={index} className="bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-500 text-blue-800 dark:text-blue-200 p-4 rounded-lg shadow-md flex items-start" role="alert">
                     <div className="py-1">
-                      <svg className="fill-current h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 8a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 mr-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
                     </div>
-                    <div>
-                        <p className="font-bold">Account Overdue</p>
-                        <p className="text-sm">Your monthly statement is overdue. Please settle the outstanding balance of <span className="font-semibold">MVR {overdueStatement.totalDue.toFixed(2)}</span> to restore credit facilities.</p>
-                        <button onClick={() => setViewingStatement(overdueStatement)} className="mt-2 px-3 py-1 text-xs font-semibold bg-red-500 text-white rounded hover:bg-red-600 transition">View Statement & Pay</button>
+                    <div className="flex-grow">
+                        <p className="font-bold">Notification</p>
+                        <p className="text-sm">{notif}</p>
                     </div>
+                    <button onClick={() => handleDismissNotification(index)} className="p-1 rounded-full hover:bg-black/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
-            </div>
-        )}
-        {outstandingStatement && !overdueStatement && (
-            <div className="bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg shadow-md mb-6" role="alert">
-                <div className="flex items-start">
-                    <div className="py-1">
-                      <svg className="fill-current h-6 w-6 text-yellow-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 8a1 1 0 100-2 1 1 0 000 2z"/></svg>
-                    </div>
-                    <div>
-                        <p className="font-bold">Your Monthly Statement is Ready!</p>
-                        <p className="text-sm">Total amount due: <span className="font-semibold">MVR {outstandingStatement.totalDue.toFixed(2)}</span></p>
-                        <button onClick={() => setViewingStatement(outstandingStatement)} className="mt-2 px-3 py-1 text-xs font-semibold bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">View Statement</button>
-                    </div>
-                </div>
-            </div>
-        )}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
-                    <h3 className="text-lg font-semibold mb-3">Pending Order Status</h3>
-                    {pendingOrder ? (
-                        <div>
-                            <p className="text-sm">Order ID: <span className="font-mono">{pendingOrder.id}</span></p>
-                            <p className="mt-2 text-2xl font-bold text-[rgb(var(--color-primary))]">{pendingOrder.orderStatus}</p>
+            ))}
+            {overdueStatement && (
+                 <div className="bg-red-100 dark:bg-red-900/50 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 rounded-lg shadow-md" role="alert">
+                    <div className="flex items-start">
+                        <div className="py-1">
+                          <svg className="fill-current h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 8a1 1 0 100-2 1 1 0 000 2z"/></svg>
                         </div>
-                    ) : (
-                        <p className="text-[rgb(var(--color-text-muted))]">You have no pending orders.</p>
+                        <div>
+                            <p className="font-bold">Account Overdue</p>
+                            <p className="text-sm">Your monthly statement is overdue. Please settle the outstanding balance of <span className="font-semibold">MVR {overdueStatement.totalDue.toFixed(2)}</span> to restore credit facilities.</p>
+                            <button onClick={() => setViewingStatement(overdueStatement)} className="mt-2 px-3 py-1 text-xs font-semibold bg-red-500 text-white rounded hover:bg-red-600 transition">View Statement & Pay</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {outstandingStatement && !overdueStatement && (
+                <div className="bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg shadow-md" role="alert">
+                    <div className="flex items-start">
+                        <div className="py-1">
+                          <svg className="fill-current h-6 w-6 text-yellow-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 102 0V6zm-1 8a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                        </div>
+                        <div>
+                            <p className="font-bold">Your Monthly Statement is Ready!</p>
+                            <p className="text-sm">Total amount due: <span className="font-semibold">MVR {outstandingStatement.totalDue.toFixed(2)}</span></p>
+                            <button onClick={() => setViewingStatement(outstandingStatement)} className="mt-2 px-3 py-1 text-xs font-semibold bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">View Statement</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {userGiftCards.length > 0 && <CustomerGiftCardsPanel giftCards={userGiftCards} />}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {showRequests && (
+                        <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                            <h3 className="text-lg font-semibold mb-3">Pending Order Status</h3>
+                            {pendingOrder ? (
+                                <div>
+                                    <p className="text-sm">Order ID: <span className="font-mono">{pendingOrder.id}</span></p>
+                                    <p className="mt-2 text-2xl font-bold text-[rgb(var(--color-primary))]">{pendingOrder.orderStatus}</p>
+                                </div>
+                            ) : (
+                                <p className="text-[rgb(var(--color-text-muted))]">You have no pending orders.</p>
+                            )}
+                        </div>
+                    )}
+                    {showRequests && (
+                        <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                            <h3 className="text-lg font-semibold mb-3">Your Requests & Suggestions</h3>
+                            {myRequests.length > 0 ? (
+                                <ul className="space-y-2 max-h-40 overflow-y-auto">
+                                {myRequests.map(req => (
+                                    <li key={req.id} className="flex justify-between items-center text-sm">
+                                        <span>{req.productName}</span>
+                                        <StatusBadge status={req.status} />
+                                    </li>
+                                ))}
+                                </ul>
+                            ) : (
+                                <p className="text-[rgb(var(--color-text-muted))]">You haven't made any requests.</p>
+                            )}
+                        </div>
                     )}
                 </div>
-                <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
-                    <h3 className="text-lg font-semibold mb-3">Your Requests & Suggestions</h3>
-                    {myRequests.length > 0 ? (
-                        <ul className="space-y-2 max-h-40 overflow-y-auto">
-                           {myRequests.map(req => (
-                               <li key={req.id} className="flex justify-between items-center text-sm">
-                                   <span>{req.productName}</span>
-                                   <StatusBadge status={req.status} />
-                               </li>
-                           ))}
-                        </ul>
-                    ) : (
-                        <p className="text-[rgb(var(--color-text-muted))]">You haven't made any requests.</p>
-                    )}
-                </div>
-            </div>
-            <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold mb-3">Hot Sellers</h3>
-                {topSellingProducts.length > 0 ? (
-                    <ul className="space-y-2">
-                        {topSellingProducts.map(p => p && <li key={p.id} className="text-sm font-medium">{p.name}</li>)}
-                    </ul>
-                ) : <p className="text-[rgb(var(--color-text-muted))]">No sales data yet.</p>}
-            </div>
-            <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md flex flex-col justify-center items-center gap-4">
-                <button onClick={onOpenRequestModal} className="w-full text-center px-4 py-3 bg-[rgb(var(--color-primary-light))] text-[rgb(var(--color-primary-text-on-light))] font-semibold rounded-lg hover:opacity-90 transition">Request a New Product</button>
-                <button onClick={onOpenSuggestionModal} className="w-full text-center px-4 py-3 bg-[rgb(var(--color-bg-subtle))] font-semibold rounded-lg hover:opacity-90 transition">Suggest Your Product</button>
+                {showRequests && (
+                    <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                        <h3 className="text-lg font-semibold mb-3">Hot Sellers</h3>
+                        {topSellingProducts.length > 0 ? (
+                            <ul className="space-y-2">
+                                {topSellingProducts.map(p => p && <li key={p.id} className="text-sm font-medium">{p.name}</li>)}
+                            </ul>
+                        ) : <p className="text-[rgb(var(--color-text-muted))]">No sales data yet.</p>}
+                    </div>
+                )}
+                {showRequests && (
+                    <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md flex flex-col justify-center items-center gap-4">
+                        <button onClick={onOpenRequestModal} className="w-full text-center px-4 py-3 bg-[rgb(var(--color-primary-light))] text-[rgb(var(--color-primary-text-on-light))] font-semibold rounded-lg hover:opacity-90 transition">Request a New Product</button>
+                        <button onClick={onOpenSuggestionModal} className="w-full text-center px-4 py-3 bg-[rgb(var(--color-bg-subtle))] font-semibold rounded-lg hover:opacity-90 transition">Suggest Your Product</button>
+                    </div>
+                )}
+                {!showRequests && (
+                     <div className="lg:col-span-2 bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                        <h3 className="text-lg font-semibold mb-3">In-House Dashboard</h3>
+                        <p className="text-[rgb(var(--color-text-muted))]">
+                            You are logged in with In-House access. You can view your order history, pay invoices, and check your loyalty status. 
+                            To place new orders, please visit the counter.
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
         {viewingStatement && <MonthlyStatementModal statement={viewingStatement} onClose={() => setViewingStatement(null)} />}
@@ -263,22 +363,147 @@ const CustomerDashboard: React.FC<{
     );
 };
 
+const ProfileTab: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const user = useAppSelector(selectUser);
+    const customers = useAppSelector(state => state.customers.items);
+    const customer = customers.find(c => c.id === user?.id);
+    const theme = useAppSelector(selectActiveTheme);
+    const activeWallpaper = useAppSelector(selectActiveWallpaper);
+    const APP_VERSION = '17.0.0';
+
+    const [formState, setFormState] = useState({
+        name: customer?.name || '',
+        email: customer?.email || '',
+        phone: customer?.phone || '',
+        address: customer?.address || '',
+    });
+    const [passwordState, setPasswordState] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
+
+    if (!customer) return null;
+
+    const handleSetTheme = (newTheme: Theme) => {
+        dispatch(setUserTheme(newTheme));
+    };
+
+    const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormState({ ...formState, [e.target.name]: e.target.value });
+    };
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPasswordState({ ...passwordState, [e.target.name]: e.target.value });
+    };
+
+    const handleProfileSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        const updatedCustomer = { ...customer, ...formState };
+        dispatch(updateCustomers(customers.map(c => c.id === customer.id ? updatedCustomer : c)));
+        dispatch(addNotification({ type: 'success', message: 'Profile updated successfully!' }));
+    };
+
+    const handlePasswordSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordState.newPassword !== passwordState.confirmPassword) {
+            dispatch(addNotification({ type: 'error', message: 'New passwords do not match.' }));
+            return;
+        }
+        dispatch(updatePassword({
+            currentPassword: passwordState.currentPassword,
+            newPassword: passwordState.newPassword
+        })).unwrap().then(() => {
+            setPasswordState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        }).catch(err => {
+            dispatch(addNotification({ type: 'error', message: err.message || 'Failed to update password.' }));
+        });
+    };
+
+    return (
+        <div className="space-y-8 max-w-4xl mx-auto">
+            <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold mb-4">Your Profile</h3>
+                <form onSubmit={handleProfileSave} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label className="block text-sm mb-1">Name</label><input name="name" value={formState.name} onChange={handleProfileChange} className="w-full p-2 border rounded" /></div>
+                        <div><label className="block text-sm mb-1">Email</label><input name="email" type="email" value={formState.email} onChange={handleProfileChange} className="w-full p-2 border rounded" /></div>
+                        <div><label className="block text-sm mb-1">Phone</label><input name="phone" value={formState.phone} onChange={handleProfileChange} className="w-full p-2 border rounded" /></div>
+                        <div><label className="block text-sm mb-1">Address</label><input name="address" value={formState.address} onChange={handleProfileChange} className="w-full p-2 border rounded" /></div>
+                    </div>
+                    <div className="text-right"><button type="submit" className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md">Save Changes</button></div>
+                </form>
+            </div>
+            <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold mb-4">Change Password</h3>
+                <form onSubmit={handlePasswordSave} className="space-y-4 max-w-sm">
+                    <div><label className="block text-sm mb-1">Current Password</label><input name="currentPassword" type="password" value={passwordState.currentPassword} onChange={handlePasswordChange} className="w-full p-2 border rounded" required /></div>
+                    <div><label className="block text-sm mb-1">New Password</label><input name="newPassword" type="password" value={passwordState.newPassword} onChange={handlePasswordChange} className="w-full p-2 border rounded" required /></div>
+                    <div><label className="block text-sm mb-1">Confirm New Password</label><input name="confirmPassword" type="password" value={passwordState.confirmPassword} onChange={handlePasswordChange} className="w-full p-2 border rounded" required /></div>
+                    <div className="text-right"><button type="submit" className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md">Update Password</button></div>
+                </form>
+            </div>
+             <div className="bg-[rgb(var(--color-bg-card))] p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold mb-4">Appearance</h3>
+                 <div className="p-4 bg-[rgb(var(--color-bg-subtle))] rounded-lg flex items-center justify-between">
+                    <div>
+                        <p className="font-medium text-[rgb(var(--color-text-base))]">App Theme</p>
+                        <p className="text-sm text-[rgb(var(--color-text-muted))]">Change the look and feel of the application.</p>
+                    </div>
+                    <ThemeSwitcher theme={theme} setTheme={handleSetTheme} />
+                </div>
+                {theme === 'material-you' && <MaterialYouSettings />}
+                {theme === 'glassmorphism' && (
+                    <WallpaperGallery 
+                        activeWallpaper={activeWallpaper} 
+                        onSelectWallpaper={(url) => dispatch(setUserWallpaper(url))} 
+                    />
+                )}
+            </div>
+            <AboutPanel version={APP_VERSION} />
+        </div>
+    );
+};
 
 export const CustomerPortalView: React.FC = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectUser);
     const customers = useAppSelector(state => state.customers.items);
     const products = useAppSelector(state => state.products.items);
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'order' | 'loyalty' | 'history'>('dashboard');
+    const allGiftCards = useAppSelector(state => state.giftCards.items);
     
-    // State for ordering tab
+    const [activeTab, setActiveTab] = useState<CustomerPortalTab>('dashboard');
     const [cart, setCart] = useState<CartItem[]>([]);
     const [productSearch, setProductSearch] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('All');
-    
-    // State for modals
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
     const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+    const [isGiftCardModalOpen, setIsGiftCardModalOpen] = useState(false);
+    const [appliedGiftCard, setAppliedGiftCard] = useState<GiftCard | null>(null);
+
+    const customer = customers.find(c => c.id === user?.id);
+    const canOrder = customer?.dashboardAccess !== 'in-house';
+
+    const userGiftCards = useMemo(() => {
+        const now = new Date();
+        return allGiftCards.filter(gc => 
+            gc.customerId === user?.id && 
+            gc.isEnabled && 
+            gc.currentBalance > 0 && 
+            (!gc.expiryDate || new Date(gc.expiryDate) > now)
+        );
+    }, [allGiftCards, user]);
+
+    const { subtotal, total, giftCardDeduction } = useMemo(() => {
+        const sub = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        let deduction = 0;
+        if (appliedGiftCard) {
+            deduction = Math.min(sub, appliedGiftCard.currentBalance);
+        }
+        const finalTotal = sub - deduction;
+        return { subtotal: sub, total: finalTotal, giftCardDeduction: deduction };
+    }, [cart, appliedGiftCard]);
 
     const getBundleStock = (product: Product) => {
         if (!product.isBundle || !product.bundleItems || product.bundleItems.length === 0) return product.stock;
@@ -313,9 +538,20 @@ export const CustomerPortalView: React.FC = () => {
         }
         setCart((prevCart) => newQuantity <= 0 ? prevCart.filter(item => item.id !== productId) : prevCart.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item));
     };
+    
+    const handleApplyGiftCardCode = (code: string) => {
+        const card = allGiftCards.find(gc => gc.id.toLowerCase() === code.toLowerCase());
+        const now = new Date();
+        if (card && card.isEnabled && card.currentBalance > 0 && (!card.expiryDate || new Date(card.expiryDate) > now)) {
+            setAppliedGiftCard(card);
+            dispatch(addNotification({ type: 'success', message: `Gift Card applied. Balance: MVR ${card.currentBalance.toFixed(2)}`}));
+            setIsGiftCardModalOpen(false);
+        } else {
+            dispatch(addNotification({ type: 'error', message: 'Invalid, expired, or empty gift card.'}));
+        }
+    };
 
     const handlePlaceOrder = () => {
-        const customer = customers.find(c => c.id === user?.id);
         if (!customer || cart.length === 0) {
             dispatch(addNotification({ type: 'error', message: "Cart is empty or customer not found." }));
             return;
@@ -325,10 +561,7 @@ export const CustomerPortalView: React.FC = () => {
             dispatch(addNotification({ type: 'error', message: "Cannot place new order: Your account is currently blocked due to an overdue balance." }));
             return;
         }
-        
-        const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-        // FIX: Added missing 'customerId' property to align with the Transaction type.
         const newTransaction: Transaction = {
             id: `WEB-${Date.now()}`,
             customer: customer,
@@ -336,18 +569,21 @@ export const CustomerPortalView: React.FC = () => {
             items: cart,
             subtotal: subtotal,
             discountAmount: 0,
-            total: subtotal,
+            total: total,
             date: new Date().toISOString(),
-            paymentStatus: 'unpaid',
+            paymentStatus: total === 0 ? 'paid' : 'unpaid',
             orderStatus: 'Pending',
+            paymentMethod: appliedGiftCard ? (total === 0 ? 'gift_card' : 'multiple') : 'unpaid',
+            giftCardPayments: appliedGiftCard ? [{ cardId: appliedGiftCard.id, amount: giftCardDeduction }] : [],
         };
 
         dispatch(saveTransaction({ transaction: newTransaction, source: 'customer' }));
         dispatch(addNotification({ type: 'success', message: 'Order Placed Successfully!' }));
         setCart([]);
+        setAppliedGiftCard(null);
     };
 
-    const TabButton: React.FC<{ tab: 'dashboard' | 'order' | 'loyalty' | 'history'; label: string }> = ({ tab, label }) => (
+    const TabButton: React.FC<{ tab: CustomerPortalTab; label: string }> = ({ tab, label }) => (
         <button onClick={() => setActiveTab(tab)} className={`px-3 py-2 font-semibold transition-colors rounded-md ${activeTab === tab ? 'bg-[rgb(var(--color-primary-light))] text-[rgb(var(--color-primary-text-on-light))]' : 'hover:bg-[rgb(var(--color-bg-subtle))]'}`}>{label}</button>
     );
 
@@ -359,9 +595,10 @@ export const CustomerPortalView: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <div className="hidden md:flex items-center gap-2">
                         <TabButton tab="dashboard" label="Dashboard" />
-                        <TabButton tab="order" label="Place Order" />
-                        <TabButton tab="loyalty" label="Loyalty" />
+                        {canOrder && <TabButton tab="order" label="Place Order" />}
                         <TabButton tab="history" label="Order History" />
+                        <TabButton tab="loyalty" label="Loyalty" />
+                        <TabButton tab="profile" label="Profile" />
                     </div>
                     <button onClick={() => dispatch(logout())} className="p-2 rounded-full hover:bg-[rgb(var(--color-bg-subtle))]">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[rgb(var(--color-text-muted))]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -372,8 +609,14 @@ export const CustomerPortalView: React.FC = () => {
             </div>
         </header>
         <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-            {activeTab === 'dashboard' && <CustomerDashboard onOpenRequestModal={() => setIsRequestModalOpen(true)} onOpenSuggestionModal={() => setIsSuggestionModalOpen(true)} />}
-            {activeTab === 'order' && (
+            {activeTab === 'dashboard' && (
+                <DashboardTab 
+                    onOpenRequestModal={() => setIsRequestModalOpen(true)} 
+                    onOpenSuggestionModal={() => setIsSuggestionModalOpen(true)}
+                    showRequests={canOrder}
+                />
+            )}
+            {activeTab === 'order' && canOrder && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2">
                         <ProductGrid 
@@ -386,24 +629,41 @@ export const CustomerPortalView: React.FC = () => {
                         />
                     </div>
                     <div className="lg:col-span-1">
-                        <CustomerCart cart={cart} onUpdateQuantity={updateQuantity} onPlaceOrder={handlePlaceOrder} />
+                        <CustomerCart 
+                            cart={cart}
+                            subtotal={subtotal}
+                            total={total}
+                            giftCardDeduction={giftCardDeduction}
+                            appliedGiftCard={appliedGiftCard}
+                            onUpdateQuantity={updateQuantity} 
+                            onPlaceOrder={handlePlaceOrder}
+                            onApplyGiftCardClick={() => setIsGiftCardModalOpen(true)}
+                            onRemoveGiftCard={() => setAppliedGiftCard(null)}
+                        />
                     </div>
                 </div>
             )}
             {activeTab === 'loyalty' && <CustomerLoyaltyView />}
-            {activeTab === 'history' && <OrderHistory />}
+            {activeTab === 'history' && <HistoryTab />}
+            {activeTab === 'profile' && <ProfileTab />}
         </main>
         <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-[rgb(var(--color-bg-card))] shadow-lg z-30">
             <nav className="flex justify-around py-2">
                 <TabButton tab="dashboard" label="Dashboard" />
-                <TabButton tab="order" label="Order" />
-                <TabButton tab="loyalty" label="Loyalty" />
+                {canOrder && <TabButton tab="order" label="Order" />}
                 <TabButton tab="history" label="History" />
+                <TabButton tab="profile" label="Profile" />
             </nav>
         </footer>
 
         <ProductRequestModal isOpen={isRequestModalOpen} onClose={() => setIsRequestModalOpen(false)} />
         <ProductSuggestionModal isOpen={isSuggestionModalOpen} onClose={() => setIsSuggestionModalOpen(false)} />
+        <ApplyGiftCardModal
+            isOpen={isGiftCardModalOpen}
+            onClose={() => setIsGiftCardModalOpen(false)}
+            onApply={handleApplyGiftCardCode}
+            customerGiftCards={userGiftCards}
+        />
         </>
     );
 };

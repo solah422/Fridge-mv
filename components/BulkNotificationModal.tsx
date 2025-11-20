@@ -14,6 +14,7 @@ export const BulkNotificationModal: React.FC<BulkNotificationModalProps> = ({ is
     e.preventDefault();
     if (message.trim()) {
       onSend(message.trim());
+      setMessage(''); // Clear after send
     }
   };
 
@@ -25,27 +26,28 @@ export const BulkNotificationModal: React.FC<BulkNotificationModalProps> = ({ is
         <form onSubmit={handleSubmit}>
           <div className="p-4 border-b border-[rgb(var(--color-border-subtle))] flex justify-between items-center">
             <h3 className="text-xl font-bold text-[rgb(var(--color-text-base))]">Send Bulk Notification</h3>
-            <button type="button" onClick={onClose} className="text-3xl">&times;</button>
+            <button type="button" onClick={onClose} className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-base))] text-3xl">&times;</button>
           </div>
           <div className="p-6 space-y-4">
             <p className="text-sm text-[rgb(var(--color-text-muted))]">
-              This message will be sent to all <strong>{selectedCount}</strong> selected customers. It will appear as a banner on their dashboard.
+              This message will be sent to <strong>{selectedCount}</strong> selected customers. It will appear as a banner at the top of their dashboard.
             </p>
             <div>
-              <label htmlFor="bulk-message" className="block text-sm font-medium mb-1">Notification Message</label>
+              <label htmlFor="bulk-message" className="block text-sm font-medium mb-1 text-[rgb(var(--color-text-base))]">Notification Message</label>
               <textarea
                 id="bulk-message"
                 value={message}
                 onChange={e => setMessage(e.target.value)}
-                className="w-full p-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))]"
+                className="w-full p-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-bg-card))] text-[rgb(var(--color-text-base))] focus:ring-2 focus:ring-[rgb(var(--color-primary-focus-ring))]"
                 rows={4}
+                placeholder="e.g., Our store will be closed tomorrow for maintenance."
                 required
               />
             </div>
           </div>
-          <div className="p-4 bg-[rgb(var(--color-bg-subtle))] border-t flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-[rgb(var(--color-border-subtle))] rounded-md">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md">
+          <div className="p-4 bg-[rgb(var(--color-bg-subtle))] border-t border-[rgb(var(--color-border-subtle))] flex justify-end gap-3">
+            <button type="button" onClick={onClose} className="px-4 py-2 bg-[rgb(var(--color-border-subtle))] text-[rgb(var(--color-text-base))] rounded-md hover:bg-[rgb(var(--color-border))] transition">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-[rgb(var(--color-primary))] text-[rgb(var(--color-text-on-primary))] rounded-md hover:bg-[rgb(var(--color-primary-hover))] transition font-semibold">
               Send Notification
             </button>
           </div>

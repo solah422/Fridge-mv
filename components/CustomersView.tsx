@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Customer, Transaction, LoyaltySettings, CustomerGroup } from '../types';
+import { Customer, Transaction, LoyaltySettings, CustomerGroup, Credential } from '../types';
 import { ManageCustomersModal } from './ManageCustomersModal';
 import { ImportCustomersModal } from './ImportCustomersModal';
 import { LoyaltySettingsView } from './LoyaltySettingsView';
@@ -8,6 +8,9 @@ import { addNotification } from '../store/slices/notificationsSlice';
 import { BulkNotificationModal } from './BulkNotificationModal';
 import { selectAllCustomerGroups } from '../store/slices/customerGroupsSlice';
 import { ManageGroupsModal } from './ManageGroupsModal';
+import { selectUser } from '../store/slices/authSlice';
+import { selectAllCredentials } from '../store/slices/credentialsSlice';
+import { ManagePermissionsModal } from './ManagePermissionsModal';
 
 interface CustomersViewProps {
   customers: Customer[];
@@ -15,12 +18,6 @@ interface CustomersViewProps {
   transactions: Transaction[];
   loyaltySettings: LoyaltySettings;
   onLoyaltySettingsUpdate: (settings: LoyaltySettings) => void;
-}
-
-type CustomerData = Customer & {
-    transactionCount: number;
-    totalSpent: number;
-    lastPurchase: Date | null;
 }
 
 const StatCard: React.FC<{ title: string; value: string | number; }> = ({ title, value }) => (
@@ -37,18 +34,26 @@ const TabButton: React.FC<{ label: string; active: boolean; onClick: () => void 
 
 export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCustomersUpdate, transactions, loyaltySettings, onLoyaltySettingsUpdate }) => {
   const dispatch = useAppDispatch();
+  const currentUser = useAppSelector(selectUser);
   const customerGroups = useAppSelector(selectAllCustomerGroups);
+  const credentials = useAppSelector(selectAllCredentials);
+  
   const [activeTab, setActiveTab] = useState<'customers' | 'loyalty'>('customers');
   const [searchTerm, setSearchTerm] = useState('');
   const [groupFilter, setGroupFilter] = useState<string>('all');
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isGroupsModalOpen, setIsGroupsModalOpen] = useState(false);
-  const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
-  const [selectedCustomerIds, setSelectedCustomerIds] = useState<number[]>([]);
+  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [isBulkNotificationModalOpen, setIsBulkNotificationModalOpen] = useState(false);
+  
+  const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
+  const [customerForPermissions, setCustomerForPermissions] = useState<Customer | null>(null);
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState<number[]>([]);
 
   const groupMap = useMemo(() => new Map(customerGroups.map(g => [g.id, g.name])), [customerGroups]);
+  const credentialMap = useMemo(() => new Map(credentials.map(c => [c.redboxId, c])), [credentials]);
 
   const customerData = useMemo(() => {
     return customers.map(customer => {
@@ -94,6 +99,15 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
   const handleOpenEditModal = (customer: Customer) => {
     setCustomerToEdit(customer);
     setIsModalOpen(true);
+  };
+
+  const handleOpenPermissionsModal = (customer: Customer) => {
+      if (customer.redboxId) {
+          setCustomerForPermissions(customer);
+          setIsPermissionsModalOpen(true);
+      } else {
+          dispatch(addNotification({ type: 'error', message: 'This customer does not have a Redbox ID assigned.' }));
+      }
   };
 
   const handleSaveCustomer = (customerData: Customer | Omit<Customer, 'id'>) => {
@@ -223,16 +237,15 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
                                 {selectedCustomerIds.length} customer(s) selected
                             </p>
                             <div className="flex items-center gap-2">
-                                <button onClick={() => setIsBulkNotificationModalOpen(true)} className="px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-md hover:bg-blue-600">
+                                <button onClick={() => setIsBulkNotificationModalOpen(true)} className="px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700 shadow-sm transition-colors">
                                     Send Notification
                                 </button>
-                                <button onClick={handleDeleteSelected} className="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-md hover:bg-red-600">
+                                <button onClick={handleDeleteSelected} className="px-3 py-1 bg-red-600 text-white text-xs font-semibold rounded-md hover:bg-red-700 shadow-sm transition-colors">
                                     Delete Selected
                                 </button>
                             </div>
                         </div>
                     )}
-
 
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-[rgb(var(--color-border-subtle))]">
@@ -242,35 +255,57 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
                                         <input type="checkbox"
                                                checked={isAllSelected}
                                                onChange={handleSelectAll}
-                                               className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                                               className="h-4 w-4 rounded border-[rgb(var(--color-border))] text-[rgb(var(--color-primary))] focus:ring-[rgb(var(--color-primary-focus-ring))]" />
                                     </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Name</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Group</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Contact</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Total Spent</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Last Purchase</th>
+                                    {currentUser?.role === 'admin' && (
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Role</th>
+                                    )}
                                     <th className="px-4 py-3 text-right text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-[rgb(var(--color-bg-card))] divide-y divide-[rgb(var(--color-border-subtle))]">
-                                {filteredCustomers.map(customer => (
-                                    <tr key={customer.id}>
-                                        <td className="px-2 py-4">
-                                            <input type="checkbox"
-                                                   checked={selectedCustomerIds.includes(customer.id)}
-                                                   onChange={() => handleSelectOne(customer.id)}
-                                                   className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-                                        </td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[rgb(var(--color-text-base))]">{customer.name}</td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.groupId ? groupMap.get(customer.groupId) : 'None'}</td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.email || customer.phone || 'N/A'}</td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">MVR {customer.totalSpent.toFixed(2)}</td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.lastPurchase ? customer.lastPurchase.toLocaleDateString() : 'N/A'}</td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button onClick={() => handleOpenEditModal(customer)} className="text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary-hover))]">Edit</button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {filteredCustomers.map(customer => {
+                                    const cred = customer.redboxId ? credentialMap.get(customer.redboxId) : null;
+                                    return (
+                                        <tr key={customer.id} className="hover:bg-[rgb(var(--color-bg-subtle))] transition-colors">
+                                            <td className="px-2 py-4">
+                                                <input type="checkbox"
+                                                    checked={selectedCustomerIds.includes(customer.id)}
+                                                    onChange={() => handleSelectOne(customer.id)}
+                                                    className="h-4 w-4 rounded border-[rgb(var(--color-border))] text-[rgb(var(--color-primary))] focus:ring-[rgb(var(--color-primary-focus-ring))]" />
+                                            </td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[rgb(var(--color-text-base))]">{customer.name}</td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.groupId ? groupMap.get(customer.groupId) : 'None'}</td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.email || customer.phone || 'N/A'}</td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">MVR {customer.totalSpent.toFixed(2)}</td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{customer.lastPurchase ? customer.lastPurchase.toLocaleDateString() : 'N/A'}</td>
+                                            {currentUser?.role === 'admin' && (
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                                    <span className={`px-2 py-0.5 rounded text-xs font-semibold capitalize ${
+                                                        cred?.role === 'admin' ? 'bg-red-100 text-red-800' : 
+                                                        cred?.role === 'finance' ? 'bg-blue-100 text-blue-800' : 
+                                                        'bg-gray-100 text-gray-800'
+                                                    }`}>
+                                                        {cred?.role || 'Customer'}
+                                                    </span>
+                                                </td>
+                                            )}
+                                            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                                {currentUser?.role === 'admin' && (
+                                                    <button onClick={() => handleOpenPermissionsModal(customer)} className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-base))]" title="Manage Permissions">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                                    </button>
+                                                )}
+                                                <button onClick={() => handleOpenEditModal(customer)} className="text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary-hover))]">Edit</button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -311,6 +346,18 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, onCusto
         onSend={handleSendBulkNotification}
         selectedCount={selectedCustomerIds.length}
     />
+    {customerForPermissions && (
+        <ManagePermissionsModal
+            isOpen={isPermissionsModalOpen}
+            onClose={() => setIsPermissionsModalOpen(false)}
+            customer={customerForPermissions}
+            currentRole={
+                customerForPermissions.redboxId 
+                ? (credentialMap.get(customerForPermissions.redboxId)?.role || 'customer') 
+                : 'customer'
+            }
+        />
+    )}
     </>
   );
 };

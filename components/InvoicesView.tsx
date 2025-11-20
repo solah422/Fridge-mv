@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import { Transaction, MonthlyStatement, InventoryEvent, Customer } from '../types';
-import { InvoiceModal } from './InvoiceModal';
+import { InvoiceModal, InvoiceDocument, SummaryInvoiceModal } from './InvoiceModal';
 import { CalendarDropdown } from './CalendarDropdown';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { updateTransaction } from '../store/slices/transactionsSlice';
@@ -11,6 +12,14 @@ import { createGiftCard } from '../store/slices/giftCardSlice';
 import { addNotification } from '../store/slices/notificationsSlice';
 import { selectAllMonthlyStatements, updateMonthlyStatement } from '../store/slices/monthlyStatementsSlice';
 import { MonthlyStatementModal } from './MonthlyStatementModal';
+import { selectCompanyLogo } from '../store/slices/appSlice';
+
+declare global {
+  interface Window {
+    jspdf: any;
+    html2canvas: any;
+  }
+}
 
 type ViewTab = 'invoices' | 'statements';
 
@@ -20,8 +29,10 @@ const InvoicesList: React.FC = () => {
     const products = useAppSelector(state => state.products.items);
     const customers = useAppSelector(state => state.customers.items);
     const loyaltySettings = useAppSelector(state => state.loyalty.loyaltySettings);
+    const companyLogo = useAppSelector(selectCompanyLogo);
 
     const [selectedInvoice, setSelectedInvoice] = useState<Transaction | null>(null);
+    const [pdfInvoice, setPdfInvoice] = useState<Transaction | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -29,6 +40,10 @@ const InvoicesList: React.FC = () => {
     const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'Pending' | 'Out for Delivery' | 'Delivered'>('all');
     const [isStartDatePickerOpen, setIsStartDatePickerOpen] = useState(false);
     const [isEndDatePickerOpen, setIsEndDatePickerOpen] = useState(false);
+    
+    // Multi-select and Summary Modal state
+    const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
+    const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
 
     const filteredTransactions = useMemo(() => {
         return [...transactions].filter(tx => {
@@ -43,6 +58,36 @@ const InvoicesList: React.FC = () => {
         }).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       }, [transactions, searchTerm, startDate, endDate, paymentStatusFilter, orderStatusFilter]);
       
+      useEffect(() => {
+        if (pdfInvoice) {
+            const generatePdf = async () => {
+                // Small delay to allow DOM to render the hidden invoice
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const { jsPDF } = window.jspdf;
+                const sourceElement = document.getElementById('hidden-invoice-render');
+                
+                if (sourceElement && window.html2canvas && jsPDF) {
+                    try {
+                        const canvas = await window.html2canvas(sourceElement, { scale: 2, useCORS: true });
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                        pdf.save(`Invoice-${pdfInvoice.id}.pdf`);
+                        dispatch(addNotification({ type: 'success', message: `PDF generated for ${pdfInvoice.id}` }));
+                    } catch (error) {
+                        console.error("PDF Generation failed", error);
+                        dispatch(addNotification({ type: 'error', message: 'Failed to generate PDF' }));
+                    }
+                }
+                setPdfInvoice(null);
+            };
+            generatePdf();
+        }
+      }, [pdfInvoice, dispatch]);
+
       const handleUpdateTransaction = (updatedTx: Transaction) => {
         dispatch(updateTransaction(updatedTx));
         if (selectedInvoice && selectedInvoice.id === updatedTx.id) {
@@ -63,7 +108,6 @@ const InvoicesList: React.FC = () => {
               const productIndex = updatedProducts.findIndex(p => p.id === returnedItem.itemId);
               if (productIndex > -1) {
                   const product = updatedProducts[productIndex];
-                  // FIX: Create a new product object instead of mutating the existing one to avoid read-only errors.
                   updatedProducts[productIndex] = { ...product, stock: product.stock + returnedItem.quantity };
                   
                   newHistoryEvents.push({ id: `evt-return-${Date.now()}-${returnedItem.itemId}`, productId: returnedItem.itemId, type: 'return', quantityChange: returnedItem.quantity, date: new Date().toISOString(), relatedId: transactionId, notes: `Return from ${transactionToUpdate!.customer.name}` });
@@ -80,7 +124,6 @@ const InvoicesList: React.FC = () => {
               const customerIndex = updatedCustomers.findIndex(c => c.id === transactionToUpdate!.customerId);
               if (customerIndex > -1) {
                   const customer = updatedCustomers[customerIndex];
-                  // FIX: Create a new customer object instead of mutating the existing one to avoid read-only errors.
                   updatedCustomers[customerIndex] = { 
                       ...customer,
                       loyaltyPoints: Math.max(0, (customer.loyaltyPoints || 0) - pointsToDeduct)
@@ -89,11 +132,9 @@ const InvoicesList: React.FC = () => {
           }
     
           if (issueStoreCredit && totalReturnValue > 0) {
-              // FIX: Removed the 'isEnabled' property from the createGiftCard dispatch call as it is not part of the expected payload and is handled within the thunk, resolving the TypeScript error.
               const newCard = await dispatch(createGiftCard({ initialBalance: totalReturnValue, customerId: transactionToUpdate.customerId })).unwrap();
               dispatch(addNotification({ type: 'success', message: `Store credit issued on new Gift Card: ${newCard.id}`}));
               
-              // Add a notification to the customer's profile
               const customerIndex = updatedCustomers.findIndex(c => c.id === transactionToUpdate!.customerId);
               if (customerIndex > -1) {
                   const customer = updatedCustomers[customerIndex];
@@ -123,6 +164,32 @@ const InvoicesList: React.FC = () => {
           dispatch(addInventoryEvents(newHistoryEvents));
           handleUpdateTransaction(updatedTransaction);
       };
+
+    // Selection Logic
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedTransactionIds(filteredTransactions.map(t => t.id));
+        } else {
+            setSelectedTransactionIds([]);
+        }
+    };
+
+    const handleSelectOne = (id: string) => {
+        setSelectedTransactionIds(prev => 
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+    
+    const isAllSelected = filteredTransactions.length > 0 && selectedTransactionIds.length === filteredTransactions.length;
+
+    const handleGenerateSummary = () => {
+        if (selectedTransactionIds.length === 0) return;
+        setIsSummaryModalOpen(true);
+    };
+
+    const selectedTransactionsData = useMemo(() => {
+        return transactions.filter(t => selectedTransactionIds.includes(t.id));
+    }, [transactions, selectedTransactionIds]);
 
     return (
         <>
@@ -154,10 +221,24 @@ const InvoicesList: React.FC = () => {
             </div>
         </div>
 
+        {selectedTransactionIds.length > 0 && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4 flex justify-between items-center">
+                <div className="text-blue-800 dark:text-blue-200 font-medium text-sm">
+                    {selectedTransactionIds.length} invoices selected
+                </div>
+                <button onClick={handleGenerateSummary} className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700 transition shadow-sm">
+                    Generate Summary Invoice
+                </button>
+            </div>
+        )}
+
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-[rgb(var(--color-border-subtle))]">
             <thead className="bg-[rgb(var(--color-bg-subtle))]">
                 <tr>
+                <th className="px-3 py-3 w-10">
+                    <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} className="rounded border-[rgb(var(--color-border))] text-indigo-600 focus:ring-indigo-500" />
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Customer</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[rgb(var(--color-text-muted))] uppercase">Date</th>
@@ -170,6 +251,9 @@ const InvoicesList: React.FC = () => {
             <tbody className="bg-[rgb(var(--color-bg-card))] divide-y divide-[rgb(var(--color-border-subtle))]">
                 {filteredTransactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-[rgb(var(--color-bg-subtle))]">
+                    <td className="px-3 py-4">
+                        <input type="checkbox" checked={selectedTransactionIds.includes(tx.id)} onChange={() => handleSelectOne(tx.id)} className="rounded border-[rgb(var(--color-border))] text-indigo-600 focus:ring-indigo-500" />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[rgb(var(--color-text-base))]">{tx.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{tx.customer.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-muted))]">{new Date(tx.date).toLocaleString()}</td>
@@ -178,18 +262,39 @@ const InvoicesList: React.FC = () => {
                     }`}>{tx.orderStatus}</span></td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${tx.paymentStatus === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>{tx.paymentStatus}</span></td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[rgb(var(--color-text-base))] font-semibold">MVR {tx.total.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button onClick={() => setSelectedInvoice(tx)} className="text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary-hover))]">View</button></td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <button onClick={() => setPdfInvoice(tx)} disabled={pdfInvoice !== null} className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-base))]">
+                            {pdfInvoice?.id === tx.id ? '...' : 'PDF'}
+                        </button>
+                        <button onClick={() => setSelectedInvoice(tx)} className="text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary-hover))]">View</button>
+                    </td>
                 </tr>
                 ))}
             </tbody>
             </table>
         </div>
+        
+        {/* Hidden Render Area for PDF Generation */}
+        {pdfInvoice && (
+            <div id="hidden-invoice-render" style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '794px' }} className="bg-white text-gray-800 font-sans p-10 pdf-render">
+                <InvoiceDocument invoice={pdfInvoice} companyLogo={companyLogo} />
+            </div>
+        )}
+
         {selectedInvoice && (
             <InvoiceModal 
             invoice={selectedInvoice} 
             onClose={() => setSelectedInvoice(null)} 
             onUpdateTransaction={handleUpdateTransaction}
             onProcessReturn={handleProcessReturn}
+            />
+        )}
+
+        {isSummaryModalOpen && (
+            <SummaryInvoiceModal 
+                isOpen={isSummaryModalOpen} 
+                onClose={() => setIsSummaryModalOpen(false)} 
+                transactions={selectedTransactionsData} 
             />
         )}
         </>
